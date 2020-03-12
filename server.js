@@ -11,7 +11,11 @@ dataBase.once('open', () => {
     console.log('MongoDb connected.');
 })
 
+const usersRouter = require('./routes/userRoutes');
+
+server.use('/users', usersRouter);
+
 
 server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
-});
+})
