@@ -1,12 +1,22 @@
 const express = require('express');
 const cors = require('cors');
+const morgan = require('morgan');
+const session = require('express-session');
 const PORT = process.env.PORT || 8888;
+const dataBase = require('./db/dbConfig');
 const server = express();
 
 server.use(cors());
 server.use(express.json());
+server.use(morgan('dev'));
+server.use(session({
+    secret: 'asdfghjkl;',
+    resave: true,
+    saveUninitialized: true
+}));
 
-const dataBase = require('./db/dbConfig');
+
+
 dataBase.once('open', () => {
     console.log('MongoDb connected.');
 })
