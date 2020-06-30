@@ -1,12 +1,21 @@
 const mongoose = require('mongoose');
 
 const UserSchema = mongoose.Schema({
+    avatar: String,
     userName: {
         type: String,
         required: true,
         unique: true,
         trim: true,
-        minlength: 3
+        minlength: 2
+    },
+    loggedIn: {
+        type: Boolean, 
+        default: false
+    },
+    accountType: {
+        type: String,
+        default: 'customer'
     },
     firstName: {
         type: String,
@@ -26,7 +35,10 @@ const UserSchema = mongoose.Schema({
     },
     zip: {
         type: Number,
-        required: false
+        required: false,
+        minLength: 5,
+        maxLength: 5,
+        default: 00000
     }
 }, {
     timestamps: true

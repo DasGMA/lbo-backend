@@ -2,47 +2,22 @@ const express = require('express');
 const User = require('../models/user');
 
 const router = express.Router();
-
-const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
-const secret = process.env.SECRET || '184jhhhgfdkdkjg@jgjf!';
-
-generateToken = (user) => {
-    const payload = {
-        password: user.password
-    };
-
-    const options = {
-        expiresIn: '1h',
-        jwtid: '12345'
-    };
-
-    return jwt.sign(payload, secret, options);
-}
-
-protected = (req, res, next) => {
-    const token = req.headers.authorization;
-
-    if (token) {
-        jwt.verify(token, secret, (error, decodedToken) => {
-            if (error) {
-                return res.status(400).json({Message: error});
-            } else {
-                req.user = {
-                    password: decodedToken.password
-                }
-                next();
-            }
-        })
-    } else {
-        return res.status(400).json({Message: 'Token not found'});
-    }
-}
+const auth = require('../Authorization/index');
+const protected = auth.protected;
+const generateToken = auth.generateToken;
 
 router.route('/').get((req, res) => {
     User.find()
         .then((users) => res.json(users))
+        .catch(error => res.status(400).json(error));
+})
+
+router.route('/user').get(protected, (req, res) => {
+    const _id = req.user.userID;
+    User.findOne({ _id })
+        .then((user) => res.json(user))
         .catch(error => res.status(400).json(error));
 })
 
@@ -68,26 +43,31 @@ router.route('/register').post((req, res) => {
                 token: token
             })
         })
-        .catch(error => res.status(400).json('Error: ', error))
+        .catch(error => res.status(400).json({Error: error}))
 });
 
 router.route('/login').post((req, res) => {
-    const { userName, password, email } = req.body;
-    if (userName.length < 4 || password.length < 4) {
-        return res.status(400).json({Message: 'Username or password are too short.'});
-    }
-    User.findOne({userName, email})
+    const { userName, password } = req.body;
+
+    User.findOne({ userName })
         .then(user => {
             if (user && bcrypt.compareSync(password, user.password)) {
-                const token = generateToken(user);
-                res.status(200).json({
-                    Message: 'Login successful',
-                    token,
-                    session: req.sessionID,
-                    user
-                })
+                
+                user.loggedIn = true;
+                user.save()
+                    .then(() => {
+                        const token = generateToken(user);
+                        res.status(200).json({
+                            Message: 'Login successful',
+                            token,
+                            session: req.sessionID,
+                            user
+                        });
+                    })
+                    .catch(error => res.status(400).json({Error: error}))
+                
             } else {
-                return res.status(400).json({Message: 'Wrong login details.'})
+                return res.status(400).json({LoginDetails: 'Wrong login details.'})
             }
         })
         .catch(error => {
@@ -95,15 +75,28 @@ router.route('/login').post((req, res) => {
         })
 })
 
-router.route('/logout').get((req, res) => {
-    req.session.destroy(error => {  
-        if (error){  
-            res.status(400).json({Message: error});
-        } else {  
-            res.status(200).json({Message: 'Logout successful.'});
-            //res.redirect('/');
-        }  
-    })
+router.route('/logout').post(protected, (req, res) => {
+    const _id  = req.body;
+
+    User.findOne({ _id })
+        .then(user => {
+            user.loggedIn = false;
+            user.save()
+                .then(() => {
+                    req.session.destroy(error => {  
+                        if (error){  
+                            res.status(400).json({Message: error});
+                        } else {  
+                            res.status(200).json({Message: 'Logout successful.'});
+                        }  
+                    })
+                })
+                .catch(error => res.status(400).json({Error: error}))
+            
+        })
+        .catch(error => {
+            return res.status(400).json({Message: error})
+        })
 })
 
 module.exports = router;
