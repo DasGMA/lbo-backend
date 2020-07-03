@@ -117,7 +117,7 @@ router.route('/delete-account').delete(protected, async (req, res) => {
     }
 })
 
-router.route('/update/').put(protected, async (req, res) => {
+router.route('/update').put(protected, async (req, res) => {
     const {
         accountType,
         zip,
