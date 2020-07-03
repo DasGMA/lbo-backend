@@ -5,7 +5,6 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 
 const auth = require('../Authorization/index');
-const e = require('express');
 const protected = auth.protected;
 const generateToken = auth.generateToken;
 
