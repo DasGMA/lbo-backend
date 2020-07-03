@@ -1,7 +1,10 @@
 const mongoose = require('mongoose');
 
 const UserSchema = mongoose.Schema({
-    avatar: String,
+    avatar: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Photos'
+    },
     userName: {
         type: String,
         required: true,
@@ -15,7 +18,9 @@ const UserSchema = mongoose.Schema({
     },
     accountType: {
         type: String,
-        default: 'customer'
+        enum: ['customer', 'business'],
+        default: 'customer',
+        required: true
     },
     firstName: {
         type: String,
@@ -35,9 +40,8 @@ const UserSchema = mongoose.Schema({
     },
     zip: {
         type: Number,
-        required: false,
-        minLength: 5,
-        maxLength: 5,
+        minlength: 5,
+        maxlength: 5,
         default: 00000
     }
 }, {
