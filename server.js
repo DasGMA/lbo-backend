@@ -23,8 +23,14 @@ dataBase.once('open', () => {
 });
 
 const usersRouter = require('./routes/userRoutes');
+const categoriesRouter = require('./routes/categoryRoutes');
+const businessRouter = require('./routes/businessRoutes');
+const addressRouter = require('./routes/addressRoutes');
 
 server.use('/users', usersRouter);
+server.use('/categories', categoriesRouter);
+server.use('/businesses', businessRouter);
+server.use('/address', addressRouter);
 
 
 server.listen(PORT, () => {

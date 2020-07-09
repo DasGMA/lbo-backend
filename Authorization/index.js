@@ -21,13 +21,21 @@ const protected = (req, res, next) => {
             } else {
                 req.user = user;
                 next();
-               
             }
         })
     } else {
         return res.status(400).json({Message: 'Token not found'});
     }
 }
+
+const refreshToken = (user) => {
+    const payload = {id: user._id};
+    const options = {
+        jwtid: '3425345'
+    };
+    return jwt.sign(payload, secret, options);
+}
+
 
 module.exports = {
     generateToken,

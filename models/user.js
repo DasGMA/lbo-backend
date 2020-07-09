@@ -18,7 +18,7 @@ const UserSchema = mongoose.Schema({
     },
     accountType: {
         type: String,
-        enum: ['customer', 'business'],
+        enum: ['customer', 'business', 'admin'],
         default: 'customer',
         required: true
     },

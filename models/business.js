@@ -9,16 +9,20 @@ const BusinessSchema = mongoose.Schema({
     businessName: {
         type: String,
         required: true,
-        maxlength: 50
+        maxlength: 50,
+        unique: true
     },
     businessDescription: {
         type: String,
         required: true
     },
+    businessAddress: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Address'
+    },
     businessImages: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Image',
-        required: true
+        ref: 'Image'
     }],
     comments: [{
         type: mongoose.Schema.Types.ObjectId,
@@ -26,7 +30,8 @@ const BusinessSchema = mongoose.Schema({
     }],
     postedBy: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
+        required: true
     }
 }, {
     timestamps: true
