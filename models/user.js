@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const UserSchema = mongoose.Schema({
     avatar: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Photos'
+        ref: 'Image'
     },
     userName: {
         type: String,
@@ -34,15 +34,17 @@ const UserSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    comments: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Comment'
+    }],
+    reviews: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Review'
+    }],
     password: {
         type: String,
         required: true
-    },
-    zip: {
-        type: Number,
-        minlength: 5,
-        maxlength: 5,
-        default: 00000
     }
 }, {
     timestamps: true

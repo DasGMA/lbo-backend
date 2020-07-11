@@ -1,5 +1,6 @@
 const express = require('express');
 const Category = require('../models/category');
+const Business = require('../models/business');
 
 const router = express.Router();
 
@@ -15,12 +16,13 @@ router.route('/').get(async (req, res) => {
     }
 });
 
-router.route('/:categoryName').get(async (req, res) => {
-    const categoryName = req.params;
+router.route('/:category').get(async (req, res) => {
+    const category = req.params;
+    const _id = req.body;
 
     try {
-        const category = await Category.findOne({ categoryName });
-        res.status(200).json(category);
+        const businesses = await Business.find({ category: _id });
+        res.status(200).json(businesses);
     } catch (error) {
         res.status(400).json(error)
     }

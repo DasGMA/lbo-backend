@@ -1,5 +1,8 @@
 const express = require('express');
 const User = require('../models/user');
+const Business = require('../models/business');
+const Address = require('../models/address');
+// const Comment = require('../models/comment');
 
 const router = express.Router();
 const bcrypt = require('bcryptjs');
@@ -35,8 +38,7 @@ router.route('/register').post((req, res) => {
         lastName: user.lastName,
         email: user.email,
         password: user.password,
-        accountType: user.accountType,
-        zip: user.zip
+        accountType: user.accountType
     });
 
     newUser.save()
@@ -104,8 +106,33 @@ router.route('/logout').post(protected, (req, res) => {
 
 router.route('/delete-account').delete(protected, async (req, res) => {
     const _id = req.body._id;
+    const accountType = req.user.user.accountType;
     try {
         const user = await User.findByIdAndDelete({ _id });
+        // Need to check for user comments and delete them
+        // const comments = await Comment.deleteMany({ postedBy: _id });
+        // Need to delete user posted images
+        // Need to delete user posted reviews
+        // const reviews = await Review.deleteMany({ postedBy: _id })
+        
+        // Checking for account type to avoid unneccessary documents search
+        // on deletion if account type is 'client'
+        if (accountType === 'admin' || accountType === 'business') {
+            const business = await Business.findOneAndDelete({ postedBy: _id });
+            const address = await Address.findOneAndDelete({ _id: business.businessAddress });
+            // Search and delete other users that commented on that business
+            // for (const _id of business.comments) {
+                // await Comment.findByIdAndDelete({ _id });
+            // }
+            // Delete reviews
+            // for (const _id of business.reviews) {
+                // await Review.findByIdAndDelete({ _id });
+            // }
+        }
+        
+        
+        // Any other upcoming related refs
+
         res.status(200).json({Message: `User with _id: ${user._id} has been deleted!`});
     } catch (error) {
         res.status(400).json(error);
@@ -115,7 +142,6 @@ router.route('/delete-account').delete(protected, async (req, res) => {
 router.route('/update').post(protected, async (req, res) => {
     const {
         accountType,
-        zip,
         _id,
         userName,
         firstName,
@@ -132,8 +158,7 @@ router.route('/update').post(protected, async (req, res) => {
         lastName: user.lastName ? user.lastName : lastName,
         email,
         accountType: user.accountType ? user.accountType : accountType,
-        password,
-        zip: user.zip ? user.zip : zip
+        password
     }
 
     const options = {

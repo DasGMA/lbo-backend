@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const BusinessSchema = mongoose.Schema({
-    businessCategory: {
+    category: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Category',
         required: true
@@ -11,6 +11,10 @@ const BusinessSchema = mongoose.Schema({
         required: true,
         maxlength: 50,
         unique: true
+    },
+    averageRating: {
+        type: Number,
+        default: 0
     },
     businessDescription: {
         type: String,
@@ -27,6 +31,10 @@ const BusinessSchema = mongoose.Schema({
     comments: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Comment'
+    }],
+    reviews: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Review'
     }],
     postedBy: {
         type: mongoose.Schema.Types.ObjectId,
