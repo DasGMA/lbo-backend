@@ -16,7 +16,7 @@ router.route('/').get(async (req, res) => {
     }
 });
 
-router.route('/:category').get(async (req, res) => {
+router.route('/category').get(async (req, res) => {
     const category = req.params;
     const _id = req.body;
 

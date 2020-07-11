@@ -2,6 +2,7 @@ const express = require('express');
 const Business = require('../models/business');
 const Address = require('../models/address');
 const User = require('../models/user');
+const Category = require('../models/category');
 // const Comment = require('../models/comment');
 // const Review = require('../models/review');
 
@@ -24,7 +25,7 @@ router.route('/').get(async (req, res) => {
 router.route('/post-business').post(protected, async (req, res) => {
     const accountType = req.user.user.accountType;
     const {
-        businessCategory,
+        category,
         businessName,
         businessDescription,
         postedBy,
@@ -37,7 +38,7 @@ router.route('/post-business').post(protected, async (req, res) => {
     } = req.body;
 
     const newBusiness = new Business({
-        businessCategory,
+        category,
         businessName,
         businessDescription,
         postedBy
@@ -57,12 +58,17 @@ router.route('/post-business').post(protected, async (req, res) => {
             const savedAddress = await newAddress.save();
             newBusiness.businessAddress = savedAddress._id;
             const savedBusiness = await newBusiness.save();
+            await Category.findByIdAndUpdate(
+                { _id: category},
+                { $push: { businesses: savedBusiness._id}, $inc: { businessCount: 1 } }
+                );
             res.status(200).json(savedBusiness);
         } catch (error) {
+            console.log(error)
             res.status(400).json(error);
         }
     } else {
-        res.status(400).json({Message: 'You have no priviledges to post a business.'})
+        res.status(400).json({Message: 'You have no priviledges to post a business.'});
     }
 });
 
@@ -155,19 +161,19 @@ router.route('/update-business-description').post(protected, async (req, res) =>
 router.route('/delete-business').delete(protected, async (req, res) => {
     const accountType = req.user.user.accountType;
     const postedByID = req.user.user._id;
-    const { _id } = req.body;
+    const { _id, categoryID, postedBy } = req.body; // _id is business _id
 
     if (accountType === 'admin' || (accountType === 'business' && postedBy === postedByID)) {
         try {
             const business = await Business.findByIdAndDelete({ _id });
             const address = await Address.findOneAndDelete({ _id: business.businessAddress });
             // Delete comments
-            // for (const _id of business.comments) {
-                // await Comment.findByIdAndDelete({ _id });
+            // for (const commentID of business.comments) {
+                // await Comment.findByIdAndDelete({ _id: commentID });
             // }
             // Delete reviews
-            // for (const _id of business.reviews) {
-                // await Review.findByIdAndDelete({ _id });
+            // for (const reviewID of business.reviews) {
+                // await Review.findByIdAndDelete({ _id: reviewID });
             // }
 
             // Remove user comments ObjectIds from array
@@ -178,7 +184,11 @@ router.route('/delete-business').delete(protected, async (req, res) => {
                     reviews: { $in: business.reviews}
                 }},
                 { multi: true }
-            )
+            );
+            await Category.findByIdAndUpdate(
+                { _id: categoryID },
+                { $pull: { businesses: _id },  $inc: { businessCount: -1}  }
+            );
             res.status(200).json({Message: 'Deleted success!'});
         } catch (error) {
             res.status(400).json(error);
