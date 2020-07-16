@@ -24,10 +24,22 @@ const BusinessSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Address'
     },
+    phoneNumber: {
+        type: Number,
+        required: true
+    },
+    businessEmail: {
+        type: String,
+        required: true
+    },
     businessImages: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Image'
     }],
+    offers: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Offer'
+    },
     comments: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Comment'
@@ -36,6 +48,10 @@ const BusinessSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Review'
     }],
+    likes: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Like'
+    },
     postedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

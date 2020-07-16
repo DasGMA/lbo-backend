@@ -1,12 +1,12 @@
 const mongoose = require('mongoose');
 
 const ReviewSchema = mongoose.Schema({
-    reviewTitle: {
+    title: {
         type: String,
         required: true,
         maxLength: 50
     },
-    reviewBody: {
+    content: {
         type: String,
         required: true
     },

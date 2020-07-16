@@ -3,8 +3,7 @@ const mongoose = require('mongoose');
 const ImageSchema = mongoose.Schema({
     image: {
         type: String,
-        data: Buffer,
-        required: true
+        data: Buffer
     },
     postedBy: {
         type: mongoose.Schema.Types.ObjectId,

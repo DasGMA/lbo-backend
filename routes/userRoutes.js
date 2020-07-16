@@ -11,12 +11,18 @@ const auth = require('../Authorization/index');
 const protected = auth.protected;
 const generateToken = auth.generateToken;
 
-router.route('/').get(async (req, res) => {
-    try {
-        const users = await User.find();
-        res.status(200).json(users);
-    } catch (error) {
-        res.status(400).json(error);
+router.route('/users').get(protected, async (req, res) => {
+    const {accountType} = req.user.user;
+
+    if (accountType === 'admin') {
+        try {
+            const users = await User.find();
+            res.status(200).json(users);
+        } catch (error) {
+            res.status(400).json(error);
+        }
+    } else {
+        res.status(500).json({Message: 'You have no access to users.'});
     }
 })
 

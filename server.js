@@ -26,11 +26,13 @@ const usersRouter = require('./routes/userRoutes');
 const categoriesRouter = require('./routes/categoryRoutes');
 const businessRouter = require('./routes/businessRoutes');
 const addressRouter = require('./routes/addressRoutes');
+const likesRouter = require('./routes/likesRoutes');
 
-server.use('/users', usersRouter);
-server.use('/categories', categoriesRouter);
-server.use('/businesses', businessRouter);
-server.use('/address', addressRouter);
+server.use('/', usersRouter);
+server.use('/', categoriesRouter);
+server.use('/', businessRouter);
+server.use('/', addressRouter);
+server.use('/', likesRouter);
 
 
 server.listen(PORT, () => {

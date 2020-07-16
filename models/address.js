@@ -28,7 +28,7 @@ const AddressSchema = mongoose.Schema(
         },
         zip: {
             type: Number,
-            default: 90745,
+            required: true,
             enum: [
                 90745,
                 90746,

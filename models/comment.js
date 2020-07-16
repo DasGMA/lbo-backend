@@ -1,12 +1,12 @@
 const mongoose = require('mongoose');
 
 const CommentSchema = mongoose.Schema({
-    commentTitle: {
+    title: {
         type: String,
         required: true,
         maxLength: 50
     },
-    commentBody: {
+    content: {
         type: String,
         required: true
     },

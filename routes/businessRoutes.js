@@ -13,9 +13,9 @@ const router = express.Router();
 const auth = require('../Authorization/index');
 const protected = auth.protected;
 
-router.route('/').get(async (req, res) => {
+router.route('/businesses').get(async (req, res) => {
     try {
-        const businesses = await Business.find();
+        const businesses = await Business.find().populate('likes').exec();
         res.status(200).json(businesses);
     } catch (error) {
         res.status(400).json(error);
@@ -34,14 +34,18 @@ router.route('/post-business').post(protected, async (req, res) => {
         country,
         state,
         city,
-        zip
+        zip,
+        phoneNumber,
+        businessEmail
     } = req.body;
 
     const newBusiness = new Business({
         category,
         businessName,
         businessDescription,
-        postedBy
+        postedBy,
+        phoneNumber,
+        businessEmail
     });
 
     const newAddress = new Address({
@@ -64,7 +68,6 @@ router.route('/post-business').post(protected, async (req, res) => {
                 );
             res.status(200).json(savedBusiness);
         } catch (error) {
-            console.log(error)
             res.status(400).json(error);
         }
     } else {
@@ -72,8 +75,8 @@ router.route('/post-business').post(protected, async (req, res) => {
     }
 });
 
-router.route('/one').get(async (req, res) => {
-    const { _id } = req.body;
+router.route('/business').get(async (req, res) => {
+    const { name, _id } = req.query;
     try {
         const business = await Business.findById({ _id })
                                         .populate({
@@ -120,14 +123,17 @@ router.route('/update-business-category').post(protected, async (req, res) => {
     const accountType = req.user.user.accountType;
     const postedByID = req.user.user._id;
     // businessCategory is category's _id
-    const { businessCategory, _id, postedBy } = req.body;
+    const { newCategory, _id, postedBy } = req.body;
 
-    const newBusinessCategory = { businessCategory };
     const options = { new: true };
 
     if (accountType === 'admin' || (accountType === 'business' && postedBy === postedByID)) {
         try {
-            const updatedBusiness = await Business.findByIdAndUpdate({ _id }, newBusinessCategory, options);
+            const updatedBusiness = await Business.findByIdAndUpdate(
+                { _id }, 
+                { category: newCategory }, 
+                options
+            );
             res.status(200).json(updatedBusiness);
         } catch (error) {
             res.status(400).json(error);

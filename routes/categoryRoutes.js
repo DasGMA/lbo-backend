@@ -7,7 +7,7 @@ const router = express.Router();
 const auth = require('../Authorization/index');
 const protected = auth.protected;
 
-router.route('/').get(async (req, res) => {
+router.route('/categories').get(async (req, res) => {
     try {
         const categories = await Category.find();
         res.status(200).json(categories);
@@ -17,18 +17,18 @@ router.route('/').get(async (req, res) => {
 });
 
 router.route('/category').get(async (req, res) => {
-    const category = req.params;
-    const _id = req.body;
+    const {_id} = req.query;
+    req.query.name;
 
     try {
-        const businesses = await Business.find({ category: _id });
+        const businesses = await Business.find({ category: _id }).populate('businessAddress').exec();
         res.status(200).json(businesses);
     } catch (error) {
         res.status(400).json(error)
     }
 });
 
-router.route('/post').post(protected, async (req, res) => {
+router.route('/post-category').post(protected, async (req, res) => {
     const accountType = req.user.user.accountType;
     const {categoryName, categoryDescription} = req.body;
 
