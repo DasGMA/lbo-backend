@@ -2,7 +2,10 @@ const express = require('express');
 const User = require('../models/user');
 const Business = require('../models/business');
 const Address = require('../models/address');
-// const Comment = require('../models/comment');
+const Comment = require('../models/comment');
+const Offer = require("../models/offer");
+const Review = require("../models/review");
+const Like = require("../models/like");
 
 const router = express.Router();
 const bcrypt = require('bcryptjs');
@@ -116,10 +119,12 @@ router.route('/delete-account').delete(protected, async (req, res) => {
     try {
         const user = await User.findByIdAndDelete({ _id });
         // Need to check for user comments and delete them
-        // const comments = await Comment.deleteMany({ postedBy: _id });
+        const comments = await Comment.deleteMany({ postedBy: _id });
         // Need to delete user posted images
         // Need to delete user posted reviews
-        // const reviews = await Review.deleteMany({ postedBy: _id })
+        const reviews = await Review.deleteMany({ postedBy: _id });
+        // Possibly delete likes? 
+
         
         // Checking for account type to avoid unneccessary documents search
         // on deletion if account type is 'client'
@@ -127,17 +132,38 @@ router.route('/delete-account').delete(protected, async (req, res) => {
             const business = await Business.findOneAndDelete({ postedBy: _id });
             const address = await Address.findOneAndDelete({ _id: business.businessAddress });
             // Search and delete other users that commented on that business
-            // for (const _id of business.comments) {
-                // await Comment.findByIdAndDelete({ _id });
-            // }
+            for (const _id of business.comments) {
+                await Comment.findByIdAndDelete({ _id });
+            }
             // Delete reviews
-            // for (const _id of business.reviews) {
-                // await Review.findByIdAndDelete({ _id });
-            // }
+            for (const _id of business.reviews) {
+                await Review.findByIdAndDelete({ _id });
+            }
+            // Delete offers
+            for (const offerID of business.offers) {
+                await Offer.findByIdAndDelete({ _id: offerID });
+            }
+            // Delete assosiated likes 
+            
+            // Delete business images 
+            // Code goes here
+
+            // Remove user comments ObjectIds from array
+            await User.update(
+                { },
+                { $pull: { 
+                    comments: { $in: business.comments},
+                    reviews: { $in: business.reviews}
+                }},
+                { multi: true }
+            );
+            await Category.findByIdAndUpdate(
+                { _id: categoryID },
+                { $pull: { businesses: _id },  $inc: { businessCount: -1}  }
+            );
+
+            // Any other upcoming related refs
         }
-        
-        
-        // Any other upcoming related refs
 
         res.status(200).json({Message: `User with _id: ${user._id} has been deleted!`});
     } catch (error) {
@@ -146,24 +172,15 @@ router.route('/delete-account').delete(protected, async (req, res) => {
 })
 
 router.route('/update').post(protected, async (req, res) => {
-    const {
-        accountType,
-        _id,
+    const { _id } = req.user.user;
+    const { userName, firstName, lastName, email, accountType, password } = req.body;
+
+    const updatedUser = {
         userName,
         firstName,
         lastName,
         email,
-        password
-    } = req.user.user;
-
-    const user = req.body;
-
-    const updatedUser = {
-        userName: user.userName ? user.userName : userName,
-        firstName: user.firstName ? user.firstName : firstName,
-        lastName: user.lastName ? user.lastName : lastName,
-        email,
-        accountType: user.accountType ? user.accountType : accountType,
+        accountType,
         password
     }
 
@@ -173,11 +190,50 @@ router.route('/update').post(protected, async (req, res) => {
 
     try {
         const user = await User.findByIdAndUpdate({_id}, updatedUser, options);
-        res.status(200).json({Message: 'Updated success.'});
+        res.status(200).json({Message: 'Updated success.', user});
     } catch (error) {
         res.status(400).json(error);
     }
-})
+});
+
+router.route('/get-user-comments').post(protected, async (req, res) => {
+    const { userID } = req.body;
+    const { _id } = req.user.user;
+
+    if (_id !== userID) return res.status(500).json({ Message: 'Not authorized.'});
+
+    try {
+        const userComments = await Comment.find({ postedBy: userID});
+        res.status(200).json({Message: 'Success.', userComments});
+    } catch (error) {
+        res.status(400).json(error);
+    }
+});
+
+router.route('/get-user-offers').post(protected, async (req, res) => {
+    const { userID } = req.body;
+    const { _id } = req.user.user;
+
+    if (_id !== userID) return res.status(500).json({ Message: 'Not authorized.'});
+
+    try {
+        const userOffers = await Offer.find({ postedBy: userID});
+        res.status(200).json({Message: 'Success.', userOffers});
+    } catch (error) {
+        res.status(400).json(error);
+    }
+});
+
+router.route('/get-user-reviews').post(async (req, res) => {
+    const { userID } = req.body;
+
+    try {
+        const userReviews = await Review.find({ postedBy: userID});
+        res.status(200).json({Message: 'Success.', userReviews});
+    } catch (error) {
+        res.status(400).json(error);
+    }
+});
 
 
 

@@ -6,7 +6,7 @@ const OfferSchema = mongoose.Schema({
         maxlength: 50,
         required: true
     },
-    description: {
+    content: {
         type: String,
         required: true
     },
@@ -14,21 +14,17 @@ const OfferSchema = mongoose.Schema({
         type: Date,
         required: true
     },
-    comments: {
+    comments: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Comment'
-    },
+    }],
     postedBy: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Business'
+        ref: 'User'
     },
     likes: {
-        type: Number,
-        default: 0
-    },
-    dislikes: {
-        type: Number,
-        default: 0
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Like'
     }
 }, {
     timestamps: true

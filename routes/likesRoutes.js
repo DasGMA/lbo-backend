@@ -1,58 +1,120 @@
-const express = require('express');
-const Business = require('../models/business');
-const Like = require('../models/like');
+const express = require("express");
+const Business = require("../models/business");
+const Comment = require("../models/comment");
+const Offer = require("../models/offer");
+const Review = require("../models/review");
+const Like = require("../models/like");
 
 const router = express.Router();
 
-const auth = require('../Authorization/index');
+const auth = require("../Authorization/index");
 const protected = auth.protected;
 
-// Get all addresses
-router.route('/increase-like').post(async (req, res) => {
-    const { businessID, userID } = req.body;
+
+// This function returns the models that we want to add likes to
+// Just dont forget to import them
+
+// Make sure model that you want to be liked, schema includes field 'likes'
+// Make sure you create a new Like before creating that model
+
+const getModel = (name) => {
+    switch(name.toLowerCase()) {
+        case 'business':
+            return Business;
+        case 'comment':
+            return Comment;
+        case 'offer':
+            return Offer;
+        case 'review':
+            return Review;
+        default:
+            return;
+    }
+}
+
+router.route("/like").post(protected, async (req, res) => {
+    // modelName is actual model name in mongodb
+    // modelID is an ID of the model that is being liked
+    // userID is the id of the user who is liking
+    const { modelName, modelID, userID } = req.body;
     try {
-        const business = await Business.find({ _id: businessID }).populate('likes').exec();
-        if (business[0].likes) {
-            if (!business[0].likes.postedBy.includes(userID)) {
-                const like = await Like.findByIdAndUpdate(
-                    { _id: business[0].likes._id },
-                    { $push: { postedBy: userID }, $inc: { count: 1 } }
-                    );
-                res.status(200).json(`Like increased by 1 to businessID ${businessID} with likeID ${like._id} by userID ${userID}`);
-            } else {
-                const like = await Like.findByIdAndUpdate(
-                    { _id: business[0].likes._id },
-                    { $pull: { postedBy: userID }, $inc: { count: -1 } }
-                    );
-                res.status(200).json(`Like decreased by 1 to businessID ${businessID} with likeID ${like._id} by because user ${userID} already had a like.`);
-            }
-        } else {
-            const like = new Like({
-                count: 1,
-                postedBy: [userID]
-            });
-
-            const newLike = await like.save();
-            const updatedBusiness = await Business.findByIdAndUpdate(
-                { _id: businessID },
-                { likes: newLike._id },
-                { new: true}
-            )
-
-            res.status(200).json(`New like model has been created with likeID: ${newLike._id}`)
+        const model = await getModel(modelName).find({ _id: modelID })
+            .populate("likes")
+            .exec();
+        if (
+            !model[0].likes.likesPostedBy.includes(userID) &&
+            !model[0].likes.dislikesPostedBy.includes(userID)
+        ) {
+            const like = await Like.findByIdAndUpdate(
+                { _id: model[0].likes._id },
+                {$push: { likesPostedBy: userID }, $inc: { count: 1, likes: 1 } }
+            );
+            res.status(200).json(
+                `Like increased by 1 to modelID ${modelID} with likeID ${like._id} by userID ${userID}`
+            );
+        } else if (model[0].likes.likesPostedBy.includes(userID)) {
+            const like = await Like.findByIdAndUpdate(
+                { _id: model[0].likes._id },
+                { $pull: { likesPostedBy: userID }, $inc: { count: -1, likes: -1 },  }
+            );
+            res.status(200).json(
+                `Like decreased by 1 to modelID ${modelID} with likeID ${like._id} because user ${userID} already had a like.`
+            );
+        } else if (model[0].likes.dislikesPostedBy.includes(userID)) {
+            const like = await Like.findByIdAndUpdate(
+                { _id: model[0].likes._id },
+                { $pull: { dislikesPostedBy: userID }, $inc: { count: 1, dislikes: -1 } }
+            );
+            res.status(200).json(
+                `Like increased by 1 to modelID ${modelID} with likeID ${like._id} because user ${userID} already had a dislike.`
+            );
         }
 
-        
     } catch (error) {
-        console.log(error)
+        console.log(error);
         res.status(400).json(error);
     }
 });
 
-router.route('/decrease-like').post(async (req, res) => {
+router.route("/dislike").post(protected, async (req, res) => {
+    // modelName is actual model name in mongodb
+    // modelID is an ID of the model that is being liked
+    // userID is the id of the user who is liking
+    const { modelName, modelID, userID } = req.body;
+
     try {
-        const addresses = await Address.find();
-        res.status(200).json(addresses);
+        const model = await getModel(modelName).find({ _id: modelID })
+            .populate("likes")
+            .exec();
+        if (
+            !model[0].likes.likesPostedBy.includes(userID) &&
+            !model[0].likes.dislikesPostedBy.includes(userID)
+        ) {
+            const like = await Like.findByIdAndUpdate(
+                { _id: model[0].likes._id },
+                { $push: { dislikesPostedBy: userID }, $inc: { count: -1, dislikes: 1 } }
+            );
+            res.status(200).json(
+                `Like decreased by 1 to modelID ${modelID} with likeID ${like._id} by userID ${userID}`
+            );
+        } else if (model[0].likes.dislikesPostedBy.includes(userID)) {
+            const like = await Like.findByIdAndUpdate(
+                { _id: model[0].likes._id },
+                { $pull: { dislikesPostedBy: userID }, $inc: { count: 1, dislikes: -1 } }
+            );
+            res.status(200).json(
+                `Like increased by 1 to modelID ${modelID} with likeID ${like._id} because user ${userID} already had a dislike.`
+            );
+        } else if (model[0].likes.likesPostedBy.includes(userID)) {
+            const like = await Like.findByIdAndUpdate(
+                { _id: model[0].likes._id },
+                { $pull: { likesPostedBy: userID }, $inc: { count: -1, likes: -1 } }
+            );
+            res.status(200).json(
+                `Like decreased by 1 to modelID ${modelID} with likeID ${like._id} because user ${userID} already had a like.`
+            );
+        }
+
     } catch (error) {
         res.status(400).json(error);
     }

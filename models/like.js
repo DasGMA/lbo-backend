@@ -5,7 +5,21 @@ const LikeSchema = mongoose.Schema({
         type: Number,
         default: 0,
     },
-    postedBy: [{
+    dislikes: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+    likes: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+    likesPostedBy: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }],
+    dislikesPostedBy: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     }]

@@ -36,10 +36,10 @@ const BusinessSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Image'
     }],
-    offers: {
+    offers: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Offer'
-    },
+    }],
     comments: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Comment'

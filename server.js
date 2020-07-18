@@ -27,12 +27,17 @@ const categoriesRouter = require('./routes/categoryRoutes');
 const businessRouter = require('./routes/businessRoutes');
 const addressRouter = require('./routes/addressRoutes');
 const likesRouter = require('./routes/likesRoutes');
+const commentsRouter = require('./routes/commentsRoutes');
+const offersRouter = require('./routes/offersRoutes');
 
 server.use('/', usersRouter);
 server.use('/', categoriesRouter);
 server.use('/', businessRouter);
 server.use('/', addressRouter);
 server.use('/', likesRouter);
+server.use('/', commentsRouter);
+server.use('/', offersRouter);
+
 
 
 server.listen(PORT, () => {

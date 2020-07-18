@@ -3,19 +3,31 @@ const Business = require('../models/business');
 const Address = require('../models/address');
 const User = require('../models/user');
 const Category = require('../models/category');
-// const Comment = require('../models/comment');
-// const Review = require('../models/review');
-
-
+const Like = require('../models/like');
+const Comment = require('../models/comment');
+const Review = require('../models/review');
+const Offer = require('../models/offer');
 
 const router = express.Router();
 
 const auth = require('../Authorization/index');
 const protected = auth.protected;
 
+router.route('/category-business-list').get(async (req, res) => {
+    const { _id } = req.query;
+    req.query.name;
+
+    try {
+        const businesses = await Business.find({ category: _id }).populate('businessAddress').exec();
+        res.status(200).json(businesses);
+    } catch (error) {
+        res.status(400).json(error);
+    }
+});
+
 router.route('/businesses').get(async (req, res) => {
     try {
-        const businesses = await Business.find().populate('likes').exec();
+        const businesses = await Business.find();
         res.status(200).json(businesses);
     } catch (error) {
         res.status(400).json(error);
@@ -57,10 +69,20 @@ router.route('/post-business').post(protected, async (req, res) => {
         zip
     });
 
+    const newLikes = new Like({
+        count: 0,
+        likes: 0,
+        dislikes: 0,
+        likesPostedBy: [],
+        dislikesPostedBy: []
+    });
+
     if (accountType === 'business' || accountType === 'admin') {
         try {
             const savedAddress = await newAddress.save();
+            const likes = await newLikes.save();
             newBusiness.businessAddress = savedAddress._id;
+            newBusiness.likes = likes._id;
             const savedBusiness = await newBusiness.save();
             await Category.findByIdAndUpdate(
                 { _id: category},
@@ -76,7 +98,7 @@ router.route('/post-business').post(protected, async (req, res) => {
 });
 
 router.route('/business').get(async (req, res) => {
-    const { name, _id } = req.query;
+    const { _id } = req.query;
     try {
         const business = await Business.findById({ _id })
                                         .populate({
@@ -85,8 +107,9 @@ router.route('/business').get(async (req, res) => {
                                         })
                                         .populate('businessAddress')
                                         .populate('businessCategory')
+                                        .populate('likes')
                                         //.populate('businessImages')
-                                        //.populate('comments')
+                                        .populate('comments')
                                         .exec();
         res.status(200).json(business);
     } catch (error) {
@@ -172,21 +195,27 @@ router.route('/delete-business').delete(protected, async (req, res) => {
     if (accountType === 'admin' || (accountType === 'business' && postedBy === postedByID)) {
         try {
             const business = await Business.findByIdAndDelete({ _id });
-            const address = await Address.findOneAndDelete({ _id: business.businessAddress });
+            await Address.findOneAndDelete({ _id: business.businessAddress });
             // Delete comments
-            // for (const commentID of business.comments) {
-                // await Comment.findByIdAndDelete({ _id: commentID });
-            // }
+            for (const commentID of business.comments) {
+                await Comment.findByIdAndDelete({ _id: commentID });
+            }
             // Delete reviews
-            // for (const reviewID of business.reviews) {
-                // await Review.findByIdAndDelete({ _id: reviewID });
-            // }
+            for (const reviewID of business.reviews) {
+                await Review.findByIdAndDelete({ _id: reviewID });
+            }
+            // Delete offers
+            for (const offerID of business.offers) {
+                await Offer.findByIdAndDelete({ _id: offerID });
+            }
+            // Delete business images 
+            // Code goes here
 
             // Remove user comments ObjectIds from array
             await User.update(
                 { },
                 { $pull: { 
-                    comments: { $in: business.businessComments},
+                    comments: { $in: business.comments},
                     reviews: { $in: business.reviews}
                 }},
                 { multi: true }

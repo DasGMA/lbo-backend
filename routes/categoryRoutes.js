@@ -1,6 +1,5 @@
 const express = require('express');
 const Category = require('../models/category');
-const Business = require('../models/business');
 
 const router = express.Router();
 
@@ -13,18 +12,6 @@ router.route('/categories').get(async (req, res) => {
         res.status(200).json(categories);
     } catch (error) {
         res.status(400).json(error);
-    }
-});
-
-router.route('/category').get(async (req, res) => {
-    const {_id} = req.query;
-    req.query.name;
-
-    try {
-        const businesses = await Business.find({ category: _id }).populate('businessAddress').exec();
-        res.status(200).json(businesses);
-    } catch (error) {
-        res.status(400).json(error)
     }
 });
 
