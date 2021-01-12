@@ -6,6 +6,10 @@ const CategorySchema = mongoose.Schema({
         required: true,
         unique: true
     },
+    type: {
+        type: String,
+        default: 'category'
+    },
     categoryDescription: {
         type: String
     },

@@ -12,6 +12,10 @@ const BusinessSchema = mongoose.Schema({
         maxlength: 50,
         unique: true
     },
+    type: {
+        type: String,
+        default: 'business'
+    },
     averageRating: {
         type: Number,
         default: 0
