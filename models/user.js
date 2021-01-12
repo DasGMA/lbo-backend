@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 
 const UserSchema = mongoose.Schema({
+    type: {
+        type: String,
+        default: 'user'
+    },
     avatar: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Image'

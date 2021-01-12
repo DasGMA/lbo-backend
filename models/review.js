@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 
 const ReviewSchema = mongoose.Schema({
+    type: {
+        type: String,
+        default: 'review'
+    },
     title: {
         type: String,
         required: true,

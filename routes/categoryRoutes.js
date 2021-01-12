@@ -1,5 +1,12 @@
 const express = require('express');
 const Category = require('../models/category');
+const Business = require('../models/business');
+const Address = require('../models/address');
+const User = require('../models/user');
+const Like = require('../models/like');
+const Comment = require('../models/comment');
+const Review = require('../models/review');
+const Offer = require('../models/offer');
 
 const router = express.Router();
 
@@ -63,6 +70,43 @@ router.route('/delete-category').delete(protected, async (req, res) => {
     if (accountType === 'admin') {
         try {
             const category = await Category.findByIdAndDelete({ _id });
+            for (const business of category.businesses) {
+                const deletedBusiness = await Business.findByIdAndDelete({ _id: business._id });
+                // Delete address
+                await Address.findByIdAndDelete({ _id: deletedBusiness.businessAddress });
+                // Delete likes
+                await Like.findByIdAndDelete({ _id: deletedBusiness.likes});
+                // Delete comments
+                for (const commentID of deletedBusiness.comments) {
+                    const comment = await Comment.findByIdAndDelete({ _id: commentID });
+                    // Delete associated likes
+                    await Like.findByIdAndDelete({ _id: comment.likes });
+                }
+                // Delete reviews
+                for (const reviewID of deletedBusiness.reviews) {
+                    const review = await Review.findByIdAndDelete({ _id: reviewID });
+                    // Delete associated likes
+                    await Like.findByIdAndDelete({ _id: review.likes });
+                }
+                // Delete offers
+                for (const offerID of deletedBusiness.offers) {
+                    const offer = await Offer.findByIdAndDelete({ _id: offerID });
+                    // Delete associated likes
+                    await Like.findByIdAndDelete({ _id: offer.likes });
+                }
+                // Delete business images 
+                // Code goes here
+
+                // Remove user comments ObjectIds from array
+                await User.update(
+                    { },
+                    { $pull: { 
+                        comments: { $in: business.comments},
+                        reviews: { $in: business.reviews}
+                    }},
+                    { multi: true }
+                );
+            }
             res.status(200).json(category);
 
         } catch (error) {

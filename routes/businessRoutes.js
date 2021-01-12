@@ -195,18 +195,27 @@ router.route('/delete-business').delete(protected, async (req, res) => {
     if (accountType === 'admin' || (accountType === 'business' && postedBy === postedByID)) {
         try {
             const business = await Business.findByIdAndDelete({ _id });
-            await Address.findOneAndDelete({ _id: business.businessAddress });
+            // Delete address
+            await Address.findByIdAndDelete({ _id: business.businessAddress });
+            // Delete likes
+            await Like.findByIdAndDelete({ _id: business.likes});
             // Delete comments
             for (const commentID of business.comments) {
-                await Comment.findByIdAndDelete({ _id: commentID });
+                const comment = await Comment.findByIdAndDelete({ _id: commentID });
+                // Delete associated likes
+                await Like.findByIdAndDelete({ _id: comment.likes });
             }
             // Delete reviews
             for (const reviewID of business.reviews) {
-                await Review.findByIdAndDelete({ _id: reviewID });
+                const review = await Review.findByIdAndDelete({ _id: reviewID });
+                // Delete associated likes
+                await Like.findByIdAndDelete({ _id: review.likes });
             }
             // Delete offers
             for (const offerID of business.offers) {
-                await Offer.findByIdAndDelete({ _id: offerID });
+                const offer = await Offer.findByIdAndDelete({ _id: offerID });
+                // Delete associated likes
+                await Like.findByIdAndDelete({ _id: offer.likes });
             }
             // Delete business images 
             // Code goes here

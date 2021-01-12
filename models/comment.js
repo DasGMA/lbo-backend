@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 
 const CommentSchema = mongoose.Schema({
+    type: {
+        type: String,
+        default: 'comment'
+    },
     title: {
         type: String,
         required: true,

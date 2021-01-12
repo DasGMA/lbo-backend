@@ -13,7 +13,7 @@ const generateToken = (user) => {
 
 const protected = (req, res, next) => {
     const token = req.headers.authorization;
-console.log({HEADERS: req.headers})
+
     if (token) {
         jwt.verify(token, secret, (error, user) => {
             if (error) {

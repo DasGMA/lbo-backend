@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 
 const OfferSchema = mongoose.Schema({
+    type: {
+        type: String,
+        default: 'offer'
+    },
     title: {
         type: String,
         maxlength: 50,

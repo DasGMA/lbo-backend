@@ -69,26 +69,24 @@ router.route('delete-offer').post(protected, async(req, res) => {
 
 router.route('edit-offfer').post(protected, async(req, res) => {
     const { postedBy, title, content, likes, expires,  offerID } = req.body;
-    const {_id} = req.user.user;
+    const { _id } = req.user.user;
 
-    if (postedBy !== _id) return res.status(500).json({Message: 'Not authorized to edit.'});
+    if (postedBy !== _id) return res.status(400).json({Message: 'Not authorized to edit.'});
 
-    const update = {
-        title,
-        content,
-        likes,
-        expires
-    }
+    const update = { 
+        $set: {
+            title,
+            content,
+            likes,
+            expires
+        } 
+    };
+
+    const options = { new: true };
 
     try {
-        const updatedOffer = await Offer.findByIdAndUpdate(
-            {_id: offerID},
-            update,
-            { new: true }
-            );
-        
+        const updatedOffer = await Offer.findByIdAndUpdate({_id: offerID}, update, options);
         res.status(200).json(updatedOffer);
-
     } catch (error) {
         res.status(400).json(error);
     }

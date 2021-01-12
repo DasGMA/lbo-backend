@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 
 const AddressSchema = mongoose.Schema(
     {
+        type: {
+            type: String,
+            default: 'address'
+        },
         streetApartmentNumber: {
             type: Number,
             required: true

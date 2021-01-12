@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 
 const LikeSchema = mongoose.Schema({
+    type: {
+        type: String,
+        default: 'like'
+    },
     count: {
         type: Number,
         default: 0,
