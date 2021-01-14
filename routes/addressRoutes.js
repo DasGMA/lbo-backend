@@ -17,4 +17,13 @@ router.route('/addresses').get(async (req, res) => {
     }
 });
 
+// const updateAddress = { $set: {
+//     streetApartmentNumber,
+//     streetName,
+//     country,
+//     state,
+//     city,
+//     zip
+// }};
+
 module.exports = router;

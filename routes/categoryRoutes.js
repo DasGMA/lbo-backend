@@ -48,11 +48,11 @@ router.route('/edit-category').post(protected, async (req, res) => {
     const { _id, categoryName, categoryDescription } = req.body;
 
     const options = { new: true };
-    const newData = { $set: { categoryName, categoryDescription } };
+    const update = { $set: { categoryName, categoryDescription } };
 
     if (accountType === 'admin') {
         try {
-            const updatedCategory = await Category.findByIdAndUpdate({ _id }, newData, options);
+            const updatedCategory = await Category.findByIdAndUpdate({ _id }, update, options);
             res.status(200).json(updatedCategory);
         } catch (error) {
             res.status(400).json(error);

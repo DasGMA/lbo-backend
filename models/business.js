@@ -26,7 +26,8 @@ const BusinessSchema = mongoose.Schema({
     },
     businessAddress: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Address'
+        ref: 'Address',
+        required: true
     },
     phoneNumber: {
         type: Number,

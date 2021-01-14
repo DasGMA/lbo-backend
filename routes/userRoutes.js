@@ -6,11 +6,13 @@ const Comment = require('../models/comment');
 const Offer = require("../models/offer");
 const Review = require("../models/review");
 const Like = require("../models/like");
+const Avatar = require('../models/avatar');
 
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 
 const auth = require('../Authorization/index');
+
 const protected = auth.protected;
 const generateToken = auth.generateToken;
 
@@ -36,7 +38,7 @@ router.route('/user').get(protected, (req, res) => {
         .catch(error => res.status(400).json(error));
 })
 
-router.route('/register').post((req, res) => {
+router.route('/register').post(async (req, res) => {
     const user = req.body;
     const hash = bcrypt.hashSync(user.password, 12);
     user.password = hash;
@@ -47,18 +49,21 @@ router.route('/register').post((req, res) => {
         lastName: user.lastName,
         email: user.email,
         password: user.password,
-        accountType: user.accountType
+        accountType: user.accountType,
+        avatar: { 'imageUrl': 'https://lbo-images.s3.us-west-1.amazonaws.com/avatars/1610576183164'}
     });
 
-    newUser.save()
-        .then(() => {
-            const token = generateToken(newUser);
-            res.status(200).json({
-                message: 'User has been added.',
-                token: token
-            })
-        })
-        .catch(error => res.status(400).json({Error: error}))
+    try {
+        const userNew = newUser.save();
+        const token = generateToken(userNew);
+        res.status(200).json({
+                    message: 'User has been added.',
+                    token: token
+                });
+    } catch (error) {
+        res.status(400).json({Error: error})
+    }
+       
 });
 
 router.route('/login').post((req, res) => {
@@ -149,7 +154,7 @@ router.route('/delete-account').delete(protected, async (req, res) => {
             // Code goes here
 
             // Remove user comments ObjectIds from array
-            await User.update(
+            await User.updateMany(
                 { },
                 { $pull: { 
                     comments: { $in: business.comments},
@@ -165,7 +170,7 @@ router.route('/delete-account').delete(protected, async (req, res) => {
             // Any other upcoming related refs
         }
 
-        res.status(200).json({Message: `User with _id: ${user._id} has been deleted!`});
+        res.status(200).json({Message: `User with _id: ${_id} has been deleted!`});
     } catch (error) {
         res.status(400).json(error);
     }

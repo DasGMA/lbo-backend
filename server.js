@@ -1,10 +1,11 @@
+require('dotenv').config();
+const config = require('./config');
+const mongoose = require('mongoose');
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const morgan = require('morgan');
 const session = require('express-session');
-const PORT = process.env.PORT || 8888;
-const dataBase = require('./db/dbConfig');
 const server = express();
 
 server.use(cors({origin: true, credentials: true}));
@@ -13,14 +14,19 @@ server.use(helmet());
 server.use(express.json());
 server.use(morgan('dev'));
 server.use(session({
-    secret: 'asdfghjkl;',
+    secret: config.SESSION_SECRET,
     resave: true,
     saveUninitialized: true
 }));
 
-dataBase.once('open', () => {
-    console.log('MongoDb connected.');
-});
+mongoose.connect(`${config.DB_URI}`, {
+    useCreateIndex: true,
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false
+  }).then(() => {
+    console.log('MongoDB connected')
+    }).catch(error => console.log(error));
 
 const usersRouter = require('./routes/userRoutes');
 const categoriesRouter = require('./routes/categoryRoutes');
@@ -29,6 +35,7 @@ const addressRouter = require('./routes/addressRoutes');
 const likesRouter = require('./routes/likesRoutes');
 const commentsRouter = require('./routes/commentsRoutes');
 const offersRouter = require('./routes/offersRoutes');
+const mediaUpload = require('./routes/mediaUploadRoutes');
 
 server.use('/', usersRouter);
 server.use('/', categoriesRouter);
@@ -37,9 +44,10 @@ server.use('/', addressRouter);
 server.use('/', likesRouter);
 server.use('/', commentsRouter);
 server.use('/', offersRouter);
+server.use('/', mediaUpload);
 
 
-
+const PORT = config.PORT;
 server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 })

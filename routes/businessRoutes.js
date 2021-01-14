@@ -117,75 +117,57 @@ router.route('/business').get(async (req, res) => {
     }
 });
 
-router.route('/update-business-name').post(protected, async (req, res) => {
-    const accountType = req.user.user.accountType;
+router.route('/edit-business').post(protected, async (req, res) => {
+    const { accountType } = req.user.user;
     const postedByID = req.user.user._id;
-    const { businessName, _id, postedBy } = req.body;
+    const {
+        _id, 
+        postedBy, 
+        businessName,
+        category,
+        businessDescription,
+        phoneNumber,
+        businessEmail
+     } = req.body;
 
-    const newBusinessName = { businessName };
     const options = { new: true };
+    const update = { $set: {
+        businessName,
+        category,
+        businessDescription,
+        phoneNumber,
+        businessEmail
+    }};
 
     if (accountType === 'admin' || (accountType === 'business' && postedBy === postedByID)) {
         try {
-            const checkForBusinessName = await Business.findOne({ businessName });
-            if (!checkForBusinessName) {
-                const updatedBusiness = await Business.findByIdAndUpdate({ _id }, newBusinessName, options);
-                res.status(200).json(updatedBusiness);
-            } else {
-                res.status(400).json({Message: 'Business name already taken.'});
+            const existingBusiness = await Business.findById({ _id });
+
+            if (category !== existingBusiness.category) {
+                await Category.findByIdAndUpdate(
+                    {_id: existingBusiness.category},
+                    { $pull: { businesses: _id}, $inc: { businessCount: -1 } },
+                    options
+                );
+                await Category.findByIdAndUpdate(
+                    {_id: category},
+                    { $push: { businesses: _id}, $inc: { businessCount: 1 } },
+                    options
+                );
             }
-        } catch (error) {
-            res.status(400).json(error);
-        }
-    } else {
-        res.status(400).json({Message: 'You have no permissions.'});
-    }
-});
 
-router.route('/update-business-category').post(protected, async (req, res) => {
-    const accountType = req.user.user.accountType;
-    const postedByID = req.user.user._id;
-    // businessCategory is category's _id
-    const { newCategory, _id, postedBy } = req.body;
-
-    const options = { new: true };
-
-    if (accountType === 'admin' || (accountType === 'business' && postedBy === postedByID)) {
-        try {
-            const updatedBusiness = await Business.findByIdAndUpdate(
-                { _id }, 
-                { category: newCategory }, 
-                options
-            );
+            const updatedBusiness = await Business.findByIdAndUpdate({ _id }, update, options);
             res.status(200).json(updatedBusiness);
+
         } catch (error) {
+            console.log(error)
             res.status(400).json(error);
         }
     } else {
         res.status(400).json({Message: 'You have no permissions.'});
     }
+
 });
-
-router.route('/update-business-description').post(protected, async (req, res) => {
-    const accountType = req.user.user.accountType;
-    const postedByID = req.user.user._id;
-    const { businessDescription, _id, postedBy } = req.body;
-
-    const newBusinessDescription = { businessDescription };
-    const options = { new: true };
-
-    if (accountType === 'admin' || (accountType === 'business' && postedBy === postedByID)) {
-        try {
-            const updatedBusiness = await Business.findByIdAndUpdate({ _id }, newBusinessDescription, options);
-            res.status(200).json(updatedBusiness);
-        } catch (error) {
-            res.status(400).json(error);
-        }
-    } else {
-        res.status(400).json({Message: 'You have no permissions.'});
-    }
-});
-
 
 router.route('/delete-business').delete(protected, async (req, res) => {
     const accountType = req.user.user.accountType;

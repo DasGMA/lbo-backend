@@ -73,7 +73,7 @@ router.route('edit-offfer').post(protected, async(req, res) => {
 
     if (postedBy !== _id) return res.status(400).json({Message: 'Not authorized to edit.'});
 
-    const update = { 
+    const update = {
         $set: {
             title,
             content,

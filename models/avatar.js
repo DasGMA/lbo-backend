@@ -1,9 +1,8 @@
 const mongoose = require('mongoose');
 
-const ImageSchema = mongoose.Schema({
+const AvatarSchema = mongoose.Schema({
     image: {
-        type: String,
-        data: Buffer
+        type: Object
     },
     postedBy: {
         type: mongoose.Schema.Types.ObjectId,
@@ -13,5 +12,5 @@ const ImageSchema = mongoose.Schema({
     timestamps: true
 });
 
-const Image = mongoose.model('Image', ImageSchema);
-module.exports = Image;
+const Avatar = mongoose.model('Avatar', AvatarSchema);
+module.exports = Avatar;

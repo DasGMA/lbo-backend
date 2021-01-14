@@ -6,8 +6,7 @@ const UserSchema = mongoose.Schema({
         default: 'user'
     },
     avatar: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Image'
+        type: Object
     },
     userName: {
         type: String,
