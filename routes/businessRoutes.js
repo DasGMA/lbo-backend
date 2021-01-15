@@ -203,7 +203,7 @@ router.route('/delete-business').delete(protected, async (req, res) => {
             // Code goes here
 
             // Remove user comments ObjectIds from array
-            await User.update(
+            await User.updateMany(
                 { },
                 { $pull: { 
                     comments: { $in: business.comments},
