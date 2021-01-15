@@ -28,19 +28,28 @@ router.route('/avatar-upload').post(protected, (req, res) => {
 
         return res.status(200).json({'imageUrl': req.files.image[0].location});
     });
-});
+})
 
-router.route('/delete-single-file').post((req, res) => {
-    const { imageUrl } = req.body;
+router.route('/delete-single-file').post(async (req, res) => {
+    const { imageUrl, userid } = req.body;
     const s3Params = getBucketKey(imageUrl);
 
-    s3.deleteObject(s3Params, (err, data) => {
-        if (err) {
-            return res.status(422).send({errors: [{title: 'File delete error', detail: err.stack}]});
-        }
-
+    try {
+        const data = await s3.deleteObject(s3Params).promise();
         return res.status(200).json(data);
-    });
+    } catch (error) {
+        return res.status(422).send({errors: [{title: 'File delete error', detail: error.stack}]});
+    }
+
+    // s3.deleteObject(s3Params, (err, data) => {
+    //     if (err) {
+    //         return res.status(422).send({errors: [{title: 'File delete error', detail: err.stack}]});
+    //     }
+
+    //     return res.status(200).json(data);
+    // });
 })
+
+
 
 module.exports = router;
