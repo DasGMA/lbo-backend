@@ -1,15 +1,16 @@
 const express = require("express");
 const router = express.Router();
-const { upload, s3 } = require('../Media-upload');
-const { getBucketKey } = require('../Media-upload/mediaHelpers');
+const { upload, s3 } = require('../Media');
+const { getBucketKey } = require('../Media/mediaHelpers');
 
 const auth = require('../Authorization/index');
 const User = require("../models/user");
+const Category = require("../models/category");
 
 const protected = auth.protected;
 
 const singleUpload = upload.fields([{ name: 'image', maxCount: 1 }]);
-const multiUpload = upload.array('image');
+const multiUpload = upload.array('image', 10);
 
 router.route('/avatar-upload').post(protected, (req, res) => {
     singleUpload(req, res, function(err) {
@@ -30,26 +31,38 @@ router.route('/avatar-upload').post(protected, (req, res) => {
     });
 })
 
-router.route('/delete-single-file').post(async (req, res) => {
-    const { imageUrl, userid } = req.body;
-    const s3Params = getBucketKey(imageUrl);
+router.route('/category-image-upload').post(protected, (req, res) => {
+    singleUpload(req, res, function(err) {
+        if (err) {
+          return res.status(422).send({errors: [{title: 'File Upload Error', detail: err.message}] });
+        }
+        
+        Category.findById({ _id: req.body.categoryid }, function(err, doc) {
+            if (err) {
+                console.log(error)
+            }
 
+            doc.image = {'imageUrl': req.files.image[0].location};
+            doc.save();
+        })
+        
+        return res.status(200).json({'imageUrl': req.files.image[0].location});
+    });
+})
+
+
+
+router.route('/delete-single-file').post( async (req, res) => {
+    const { imageUrl } = req.body;
+
+    const s3Params = getBucketKey(imageUrl);
     try {
         const data = await s3.deleteObject(s3Params).promise();
         return res.status(200).json(data);
     } catch (error) {
+        console.log(error)
         return res.status(422).send({errors: [{title: 'File delete error', detail: error.stack}]});
     }
-
-    // s3.deleteObject(s3Params, (err, data) => {
-    //     if (err) {
-    //         return res.status(422).send({errors: [{title: 'File delete error', detail: err.stack}]});
-    //     }
-
-    //     return res.status(200).json(data);
-    // });
 })
-
-
 
 module.exports = router;

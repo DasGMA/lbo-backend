@@ -6,6 +6,9 @@ const CategorySchema = mongoose.Schema({
         required: true,
         unique: true
     },
+    image: {
+        type: Object
+    },
     type: {
         type: String,
         default: 'category'
