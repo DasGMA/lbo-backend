@@ -37,10 +37,10 @@ const BusinessSchema = mongoose.Schema({
         type: String,
         required: true
     },
-    businessImages: [{
+    businessImages: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Image'
-    }],
+        ref: 'BusinessImage'
+    },
     offers: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Offer'

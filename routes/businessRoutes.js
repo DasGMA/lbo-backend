@@ -7,10 +7,12 @@ const Like = require('../models/like');
 const Comment = require('../models/comment');
 const Review = require('../models/review');
 const Offer = require('../models/offer');
+const BusinessImage = require('../models/image');
 
 const router = express.Router();
 
 const auth = require('../Authorization/index');
+
 const protected = auth.protected;
 
 router.route('/category-business-list').get(async (req, res) => {
@@ -18,16 +20,21 @@ router.route('/category-business-list').get(async (req, res) => {
     req.query.name;
 
     try {
-        const businesses = await Business.find({ category: _id }).populate('businessAddress').exec();
+        const businesses = await Business.find({ category: _id })
+                                            .populate('businessAddress')
+                                            .populate('businessImages')
+                                            .populate('offers')
+                                            .exec();
         res.status(200).json(businesses);
     } catch (error) {
+        console.log(error)
         res.status(400).json(error);
     }
 });
 
 router.route('/businesses').get(async (req, res) => {
     try {
-        const businesses = await Business.find();
+        const businesses = await Business.find().populate('businessImages').exec();
         res.status(200).json(businesses);
     } catch (error) {
         res.status(400).json(error);
@@ -69,6 +76,8 @@ router.route('/post-business').post(protected, async (req, res) => {
         zip
     });
 
+    const newImages = new BusinessImage({});
+
     const newLikes = new Like({
         count: 0,
         likes: 0,
@@ -81,9 +90,12 @@ router.route('/post-business').post(protected, async (req, res) => {
         try {
             const savedAddress = await newAddress.save();
             const likes = await newLikes.save();
+            const businessImages = await newImages.save();
             newBusiness.businessAddress = savedAddress._id;
             newBusiness.likes = likes._id;
+            newBusiness.businessImages = businessImages._id;
             const savedBusiness = await newBusiness.save();
+            await BusinessImage.findByIdAndUpdate({ _id: businessImages._id}, { $set: { postedBy: savedBusiness._id}});
             await Category.findByIdAndUpdate(
                 { _id: category},
                 { $push: { businesses: savedBusiness._id}, $inc: { businessCount: 1 } }
@@ -108,7 +120,7 @@ router.route('/business').get(async (req, res) => {
                                         .populate('businessAddress')
                                         .populate('businessCategory')
                                         .populate('likes')
-                                        //.populate('businessImages')
+                                        .populate('businessImages')
                                         .populate('comments')
                                         .exec();
         res.status(200).json(business);
@@ -200,7 +212,7 @@ router.route('/delete-business').delete(protected, async (req, res) => {
                 await Like.findByIdAndDelete({ _id: offer.likes });
             }
             // Delete business images 
-            // Code goes here
+            await BusinessImage.findByIdAndDelete({ _id:  business.businessImages });
 
             // Remove user comments ObjectIds from array
             await User.updateMany(
