@@ -1,11 +1,14 @@
 const jwt = require('jsonwebtoken');
-const secret = process.env.SECRET || '184jhhhgfdkdkjg@jgjf!';
+const config = require('../config');
+const secret = config.SECRET;
+const sessionSecret = config.SESSION_SECRET;
+
 
 const generateToken = (user) => {
     const payload = { user };
     const options = {
         expiresIn: '1h',
-        jwtid: '12345'
+        jwtid: sessionSecret
     };
 
     return jwt.sign(payload, secret, options);
@@ -19,6 +22,7 @@ const protected = (req, res, next) => {
             if (error) {
                 return res.status(400).json({Message: error});
             } else {
+                console.log('REQ', user)
                 req.user = user;
                 next();
             }
@@ -31,7 +35,7 @@ const protected = (req, res, next) => {
 const refreshToken = (user) => {
     const payload = {id: user._id};
     const options = {
-        jwtid: '12345'
+        jwtid: sessionSecret
     };
     return jwt.sign(payload, secret, options);
 }

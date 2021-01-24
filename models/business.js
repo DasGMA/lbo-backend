@@ -39,7 +39,8 @@ const BusinessSchema = mongoose.Schema({
     },
     businessImages: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'BusinessImage'
+        ref: 'BusinessImage',
+        required: true
     },
     offers: [{
         type: mongoose.Schema.Types.ObjectId,

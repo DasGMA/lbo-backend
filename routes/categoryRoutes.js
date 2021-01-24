@@ -7,10 +7,13 @@ const Like = require('../models/like');
 const Comment = require('../models/comment');
 const Review = require('../models/review');
 const Offer = require('../models/offer');
+const BusinessImage = require('../models/image');
 
 const router = express.Router();
 
 const auth = require('../Authorization/index');
+const { getBucketKeysMulti } = require('../Media/mediaHelpers');
+const { s3 } = require('../Media');
 const protected = auth.protected;
 
 router.route('/categories').get(async (req, res) => {
@@ -72,7 +75,16 @@ router.route('/delete-category').delete(protected, async (req, res) => {
             const category = await Category.findByIdAndDelete({ _id });
             if (category.businessCount > 0) {
                 for (const business of category.businesses) {
-                    const deletedBusiness = await Business.findByIdAndDelete({ _id: business._id });
+                    const deletedBusiness = await Business.findByIdAndDelete({ _id: business._id }).populate('businessImages').exec();
+                     // Delete business images mongodb and aws s3
+                     const s3params = {
+                        'Bucket': 'lbo-media',
+                        'Delete': { 
+                            Objects: getBucketKeysMulti(deletedBusiness.businessImages.images) }
+                    }
+                    await s3.deleteObjects(s3params).promise();
+                    await BusinessImage.findOneAndDelete({ postedBy:  deletedBusiness._id });
+                    
                     // Delete address
                     await Address.findByIdAndDelete({ _id: deletedBusiness.businessAddress });
                     // Delete likes
@@ -95,9 +107,7 @@ router.route('/delete-category').delete(protected, async (req, res) => {
                         // Delete associated likes
                         await Like.findByIdAndDelete({ _id: offer.likes });
                     }
-                    // Delete business images 
-                    // Code goes here
-
+                    
                     // Remove user comments ObjectIds from array
                     await User.updateMany(
                         { },
@@ -112,6 +122,7 @@ router.route('/delete-category').delete(protected, async (req, res) => {
             res.status(200).json(category);
 
         } catch (error) {
+            console.log(error)
             res.status(400).json(error);
         }
     } else {

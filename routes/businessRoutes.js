@@ -95,6 +95,7 @@ router.route('/post-business').post(protected, async (req, res) => {
             newBusiness.likes = likes._id;
             newBusiness.businessImages = businessImages._id;
             const savedBusiness = await newBusiness.save();
+    
             await BusinessImage.findByIdAndUpdate({ _id: businessImages._id}, { $set: { postedBy: savedBusiness._id}});
             await Category.findByIdAndUpdate(
                 { _id: category},
@@ -168,7 +169,11 @@ router.route('/edit-business').post(protected, async (req, res) => {
                 );
             }
 
-            const updatedBusiness = await Business.findByIdAndUpdate({ _id }, update, options);
+            const updatedBusiness = await Business.findByIdAndUpdate({ _id }, update, options)
+                                                    .populate('businessAddress')
+                                                    .populate('businessImages')
+                                                    .populate('offers')
+                                                    .exec();
             res.status(200).json(updatedBusiness);
 
         } catch (error) {

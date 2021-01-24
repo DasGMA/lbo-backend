@@ -62,43 +62,43 @@ router.route('/delete-single-file').post( async (req, res) => {
         const data = await s3.deleteObject(s3Params).promise();
         return res.status(200).json(data);
     } catch (error) {
-        console.log(error)
+    
         return res.status(422).send({errors: [{title: 'File delete error', detail: error.stack}]});
     }
 })
 
 router.route('/upload-multiple-files').post(protected, (req, res) => {
-    multiUpload(req, res, function(err) {
-        if (err) {
-          return res.status(422).send({errors: [{title: 'File Upload Error', detail: err.message}] });
+    multiUpload(req, res, async (err) => {
+        try {
+            await BusinessImage.findOneAndUpdate({ postedBy: req.body.businessid },
+                { $push: {
+                    images: [...req.files]
+                }},
+                {new: true}
+                );
+            return res.status(200).json(req.files);
+        } catch (error) {
+            return res.status(422).send({errors: [{title: 'File Upload Error', detail: err.message}] });
         }
-        
-        BusinessImage.findOne({ postedBy: req.body.businessid }, function(err, doc) {
-            if (err) {
-                console.log(error)
-            }
-
-            doc.images = req.files;
-            doc.save();
-        })
-
-        return res.status(200).json(req.files);
     });
 })
 
 router.route('/delete-multi-files').post(protected, async (req, res) => {
-    const { images } = req.body;
     
     const s3params = {
         'Bucket': 'lbo-media',
-        'Delete': { Objects: getBucketKeysMulti(images) }
+        'Delete': { Objects: getBucketKeysMulti(req.body.images) }
     }
     
     try {
         const data = await s3.deleteObjects(s3params).promise();
+        await BusinessImage.findOneAndUpdate(
+            { postedBy: req.body.businessid },
+            { $pull: { images: { $in: req.body.images}}},
+            {new: true}
+            )
         return res.status(200).json(data);
     } catch (error) {
-        console.log(error)
         return res.status(422).send({errors: [{title: 'File delete error', detail: error.stack}]});
     }
 })

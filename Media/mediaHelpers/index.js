@@ -21,7 +21,7 @@ const key = function (req, file, cb) {
     if (req.body.userid) {
         cb(null, req.body.userid);
     } else if (req.body.businessid) {
-        cb(null, req.body.businessid + Date.now().toString());
+        cb(null, req.body.businessid + Date.now().toString() + file.originalname);
     } else if (req.body.categoryid) {
         cb(null, req.body.categoryid);
     }
@@ -36,8 +36,8 @@ const getBucketKey = (string) => {
 
 const getBucketKeysMulti = (arr) => {
     return arr.reduce((deleteArray, obj) => {
-        const keys = getBucketKey(obj.location)
-        deleteArray.push({Key: keys.Key})
+        const keys = getBucketKey(obj.location);
+        deleteArray.push({Key: keys.Key});
         return deleteArray;
     }, [])
 }
