@@ -36,6 +36,7 @@ const likesRouter = require('./routes/likesRoutes');
 const commentsRouter = require('./routes/commentsRoutes');
 const offersRouter = require('./routes/offersRoutes');
 const mediaRouter = require('./routes/mediaRoutes');
+const reviewRouter = require('./routes/reviewRoutes');
 
 server.use('/', usersRouter);
 server.use('/', categoriesRouter);
@@ -45,6 +46,7 @@ server.use('/', likesRouter);
 server.use('/', commentsRouter);
 server.use('/', offersRouter);
 server.use('/', mediaRouter);
+server.use('/', reviewRouter);
 
 
 const PORT = config.PORT;

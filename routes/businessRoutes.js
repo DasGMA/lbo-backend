@@ -27,7 +27,6 @@ router.route('/category-business-list').get(async (req, res) => {
                                             .exec();
         res.status(200).json(businesses);
     } catch (error) {
-        console.log(error)
         res.status(400).json(error);
     }
 });
@@ -112,6 +111,7 @@ router.route('/post-business').post(protected, async (req, res) => {
 
 router.route('/business').get(async (req, res) => {
     const { _id } = req.query;
+   
     try {
         const business = await Business.findById({ _id })
                                         .populate({
@@ -123,7 +123,17 @@ router.route('/business').get(async (req, res) => {
                                         .populate('likes')
                                         .populate('businessImages')
                                         .populate('comments')
+                                        .populate({
+                                            path: 'reviews',
+                                            populate: {
+                                                path: 'postedBy'
+                                            },
+                                            populate: {
+                                                path: 'likes'
+                                            }
+                                        })
                                         .exec();
+        
         res.status(200).json(business);
     } catch (error) {
         res.status(400).json(error);
