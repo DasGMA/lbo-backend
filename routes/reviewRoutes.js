@@ -20,11 +20,11 @@ const getModel = (type) => {
 }
 
 router.route('/write-review').post(protected, async (req, res) => {
-    const { title, content, rating, posterId, _id, type } = req.body;
+    const { title, content, rating, postedBy, _id, type } = req.body;
     const userId = req.user.user._id;
     // _id is business or offer ID, type is business or offer type
 
-    if (userId !== posterId) {
+    if (userId !== postedBy) {
         return res.status(500).json({ Message: 'Not original poster.'});
     };
 
@@ -32,7 +32,7 @@ router.route('/write-review').post(protected, async (req, res) => {
         title,
         content,
         rating,
-        postedBy: posterId
+        postedBy
     });
 
     const newLikes = new Like({
@@ -52,9 +52,37 @@ router.route('/write-review').post(protected, async (req, res) => {
             { $push: { reviews: reviewId }},
             { new: true }
         );
+
         await getModel(type).findByIdAndUpdate(
-            {_id},
+            { _id },
             { $push: { reviews: review._id }},
+            { new: true });
+        
+        const averageRating = await getModel(type).aggregate([
+            {
+                $lookup: {
+                    from: Review,
+                    localField: reviews,
+                    foreignField: _id,
+                    as: reviews
+                }
+            },
+            {
+                $unwind: reviews
+            },
+            {
+                $group: {
+                    _id: null,
+                    averageRating: {
+                        $avg: reviews.rating
+                    }
+                }
+            }
+        ]);
+
+        await getModel(type).findByIdAndUpdate(
+            { _id },
+            { $set: { averageRating: averageRating[0].averageRating }},
             { new: true });
 
         res.status(200).json(review);
@@ -80,9 +108,38 @@ router.route('/delete-review').delete(protected, async(req, res) => {
             { $pull: { reviews: reviewId }},
             { new: true }
         );
+
         await getModel(type).findByIdAndUpdate(
             { _id },
             { $pull: { reviews: reviewId }},
+            { new: true }
+        );
+
+        const averageRating = await getModel(type).aggregate([
+            {
+                $lookup: {
+                    from: Review,
+                    localField: reviews,
+                    foreignField: _id,
+                    as: reviews
+                }
+            },
+            {
+                $unwind: reviews
+            },
+            {
+                $group: {
+                    _id: null,
+                    averageRating: {
+                        $avg: reviews.rating
+                    }
+                }
+            }
+        ]);
+
+        await getModel(type).findByIdAndUpdate(
+            { _id },
+            { $set: { averageRating: averageRating[0].averageRating }},
             { new: true }
         );
         res.status(200).json(deletedReview);

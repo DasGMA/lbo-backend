@@ -10,6 +10,13 @@ const OfferSchema = mongoose.Schema({
         maxlength: 50,
         required: true
     },
+    expirationDate: {
+        type: Date
+    },
+    averageRating: {
+        type: Number,
+        default: 0
+    },
     content: {
         type: String,
         required: true
@@ -18,6 +25,10 @@ const OfferSchema = mongoose.Schema({
         type: Date,
         required: true
     },
+    reviews: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Review'
+    }],
     comments: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Comment'
