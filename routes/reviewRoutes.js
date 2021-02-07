@@ -94,10 +94,11 @@ router.route('/write-review').post(protected, async (req, res) => {
 router.route('/delete-review').delete(protected, async(req, res) => {
     const { reviewId, _id, type, posterId } = req.body;
     const userId = req.user.user._id;
+    const { accountType } = req.user.user;
     // _id is business or offer ID, type is business or offer type
 
-    if (userId !== posterId) {
-        return res.status(500).json({ Message: 'Not original poster.'});
+    if (userId !== posterId || accountType !== 'admin' || accountType !== 'business') {
+        return res.status(500).json({ Message: 'Not authorized.'});
     };
 
     try {
@@ -149,11 +150,12 @@ router.route('/delete-review').delete(protected, async(req, res) => {
 });
 
 router.route('/edit-review').post(protected, async(req, res) => {
-    const { title, content, rating, posterId, reviewId } = req.body;
+    const { title, content, rating, posterId, reviewId, type } = req.body;
     const userId = req.user.user._id;
+    const { accountType } = req.user.user;
 
-    if (userId !== posterId) {
-        return res.status(500).json({ Message: 'Not original poster.'});
+    if (userId !== posterId || accountType !== 'admin') {
+        return res.status(500).json({ Message: 'Not authorized.'});
     };
 
     try {
@@ -162,6 +164,35 @@ router.route('/edit-review').post(protected, async(req, res) => {
             { $set: { title, content, rating }},
             { new: true }
         );
+
+        const averageRating = await getModel(type).aggregate([
+            {
+                $lookup: {
+                    from: Review,
+                    localField: reviews,
+                    foreignField: _id,
+                    as: reviews
+                }
+            },
+            {
+                $unwind: reviews
+            },
+            {
+                $group: {
+                    _id: null,
+                    averageRating: {
+                        $avg: reviews.rating
+                    }
+                }
+            }
+        ]);
+
+        await getModel(type).findByIdAndUpdate(
+            { _id },
+            { $set: { averageRating: averageRating[0].averageRating }},
+            { new: true }
+        );
+
         res.status(200).json(editedReview);
     } catch (error) {
         res.status(400).json(error);
