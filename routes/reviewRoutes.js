@@ -1,5 +1,7 @@
 const express = require('express');
 
+const { averageRating } = require('./helpers/index');
+
 const auth = require('../Authorization/index');
 const Business = require('../models/business');
 const Like = require('../models/like');
@@ -19,7 +21,7 @@ const getModel = (type) => {
     }
 }
 
-router.route('/write-review').post(protected, async (req, res) => {
+router.route('/post-review').post(protected, async (req, res) => {
     const { title, content, rating, postedBy, _id, type } = req.body;
     const userId = req.user.user._id;
     // _id is business or offer ID, type is business or offer type
@@ -48,8 +50,8 @@ router.route('/write-review').post(protected, async (req, res) => {
         newReview.likes = likes._id;
         const review = await newReview.save();
         await User.findByIdAndUpdate(
-            { _id: posterId }, 
-            { $push: { reviews: reviewId }},
+            { _id: postedBy }, 
+            { $push: { reviews: review._id }},
             { new: true }
         );
 
@@ -58,31 +60,12 @@ router.route('/write-review').post(protected, async (req, res) => {
             { $push: { reviews: review._id }},
             { new: true });
         
-        const averageRating = await getModel(type).aggregate([
-            {
-                $lookup: {
-                    from: Review,
-                    localField: reviews,
-                    foreignField: _id,
-                    as: reviews
-                }
-            },
-            {
-                $unwind: reviews
-            },
-            {
-                $group: {
-                    _id: null,
-                    averageRating: {
-                        $avg: reviews.rating
-                    }
-                }
-            }
-        ]);
+        const node = await getModel(type).find({ _id }).populate('reviews').exec();
 
+        
         await getModel(type).findByIdAndUpdate(
             { _id },
-            { $set: { averageRating: averageRating[0].averageRating }},
+            { $set: { averageRating: averageRating(node) }},
             { new: true });
 
         res.status(200).json(review);
@@ -116,33 +99,13 @@ router.route('/delete-review').delete(protected, async(req, res) => {
             { new: true }
         );
 
-        const averageRating = await getModel(type).aggregate([
-            {
-                $lookup: {
-                    from: Review,
-                    localField: reviews,
-                    foreignField: _id,
-                    as: reviews
-                }
-            },
-            {
-                $unwind: reviews
-            },
-            {
-                $group: {
-                    _id: null,
-                    averageRating: {
-                        $avg: reviews.rating
-                    }
-                }
-            }
-        ]);
+        const node = await getModel(type).find({ _id }).populate('reviews').exec();
 
+        
         await getModel(type).findByIdAndUpdate(
             { _id },
-            { $set: { averageRating: averageRating[0].averageRating }},
-            { new: true }
-        );
+            { $set: { averageRating: averageRating(node) }},
+            { new: true });
         res.status(200).json(deletedReview);
     } catch (error) {
         res.status(400).json(error);
@@ -165,33 +128,13 @@ router.route('/edit-review').post(protected, async(req, res) => {
             { new: true }
         );
 
-        const averageRating = await getModel(type).aggregate([
-            {
-                $lookup: {
-                    from: Review,
-                    localField: reviews,
-                    foreignField: _id,
-                    as: reviews
-                }
-            },
-            {
-                $unwind: reviews
-            },
-            {
-                $group: {
-                    _id: null,
-                    averageRating: {
-                        $avg: reviews.rating
-                    }
-                }
-            }
-        ]);
+        const node = await getModel(type).find({ _id }).populate('reviews').exec();
 
+        
         await getModel(type).findByIdAndUpdate(
             { _id },
-            { $set: { averageRating: averageRating[0].averageRating }},
-            { new: true }
-        );
+            { $set: { averageRating: averageRating(node) }},
+            { new: true });
 
         res.status(200).json(editedReview);
     } catch (error) {
@@ -199,4 +142,11 @@ router.route('/edit-review').post(protected, async(req, res) => {
     }
 });
 
+router.route('/check').get(async(req, res) => {
+    const node = await Business.find({ _id: '60107c4b9b8a5d0be9f69758'}).populate('reviews').exec();
+    
+    
+    console.log(averageRating(node))
+    res.status(200).json(node)
+})
 module.exports = router;

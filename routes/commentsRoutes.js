@@ -58,7 +58,7 @@ router.route('post-comment').post(protected, async(req, res) => {
     }
 });
 
-router.route('delete-comment').post(protected, async(req, res) => {
+router.route('delete-comment').delete(protected, async(req, res) => {
     const {postedBy, modelName, commentID, modelID} = req.body;
     const {_id} = req.user.user;
 
@@ -69,7 +69,8 @@ router.route('delete-comment').post(protected, async(req, res) => {
         await Like.findByIdAndDelete({ _id: deletedComment.likes });
         const updatedModel = await getModel(modelName).findOneAndUpdate(
             {_id: modelID},
-            { $pull: { comments: deletedComment._id} }
+            { $pull: { comments: deletedComment._id} },
+            { new: true }
         );
         res.status(200).json({deletedComment, updatedModel});
 
@@ -79,15 +80,16 @@ router.route('delete-comment').post(protected, async(req, res) => {
 });
 
 router.route('edit-comment').post(protected, async(req, res) => {
-    const { postedBy, title, content, likes, commentID } = req.body;
+    const { postedBy, title, content, commentID } = req.body;
     const {_id} = req.user.user;
 
     if (postedBy !== _id) return res.status(500).json({Message: 'Not authorized to edit.'});
 
     const update = {
-        title,
-        content,
-        likes
+        $set: {
+            title,
+            content
+        }
     }
 
     try {

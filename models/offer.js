@@ -11,7 +11,8 @@ const OfferSchema = mongoose.Schema({
         required: true
     },
     expirationDate: {
-        type: Date
+        type: Date,
+        required: true
     },
     averageRating: {
         type: Number,
@@ -19,10 +20,6 @@ const OfferSchema = mongoose.Schema({
     },
     content: {
         type: String,
-        required: true
-    },
-    expires: {
-        type: Date,
         required: true
     },
     reviews: [{

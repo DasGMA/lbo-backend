@@ -123,14 +123,14 @@ router.route('/business').get(async (req, res) => {
                                         .populate('likes')
                                         .populate('businessImages')
                                         .populate('comments')
-                                        .populate({
-                                            path: 'reviews',
-                                            populate: {
-                                                path: 'postedBy'
-                                            },
-                                            populate: {
-                                                path: 'likes'
-                                            }
+                                        .populate({ path: 'reviews',
+                                            populate: [
+                                                { 
+                                                path: 'postedBy',
+                                                select: '-password'
+                                                },
+                                                { path: 'likes' }
+                                            ],
                                         })
                                         .exec();
         
