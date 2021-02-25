@@ -11,10 +11,7 @@ const Avatar = require('../models/avatar');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 
-const auth = require('../Authorization/index');
-
-const protected = auth.protected;
-const generateToken = auth.generateToken;
+const { protected, generateToken, refreshToken } = require('../Authorization/index');
 
 router.route('/users').get(protected, async (req, res) => {
     const {accountType} = req.user.user;
@@ -31,12 +28,16 @@ router.route('/users').get(protected, async (req, res) => {
     }
 })
 
-router.route('/user').get(protected, (req, res) => {
-    const _id = req.user.user._id;
-    User.findOne({ _id })
-        .then((user) => res.json(user))
-        .catch(error => res.status(400).json(error));
-})
+router.route('/user').get(protected, async(req, res) => {
+    const { _id } = req.user.user;
+
+    try {
+        const user = await User.findById({ _id });
+        res.status(200).json(user);
+    } catch (error) {
+        res.status(400).json(error);
+    }
+});
 
 router.route('/register').post(async (req, res) => {
     const user = req.body;
@@ -49,51 +50,52 @@ router.route('/register').post(async (req, res) => {
         lastName: user.lastName,
         email: user.email,
         password: user.password,
-        accountType: user.accountType,
+        accountType: user.accountType.toLocaleLowerCase(),
         avatar: { 'imageUrl': 'https://lbo-images.s3.us-west-1.amazonaws.com/avatars/1610576183164'}
     });
 
     try {
-        const userNew = newUser.save();
+        const userNew = await newUser.save();
         const token = generateToken(userNew);
         res.status(200).json({
                     message: 'User has been added.',
-                    token: token
+                    token
                 });
     } catch (error) {
-        res.status(400).json({Error: error})
+        res.status(400).json({error});
     }
        
 });
 
-router.route('/login').post((req, res) => {
+router.route('/login').post(async(req, res) => {
     const { userName, password } = req.body;
 
-    User.findOne({ userName })
-        .then(user => {
-            if (user && bcrypt.compareSync(password, user.password)) {
-                
-                user.loggedIn = true;
-                user.save()
-                    .then(() => {
-                        const token = generateToken(user);
-                        res.status(200).json({
-                            Message: 'Login successful',
-                            token,
-                            session: req.sessionID,
-                            user
-                        });
-                    })
-                    .catch(error => res.status(400).json({Error: error}))
-                
-            } else {
-                return res.status(400).json({LoginDetails: 'Wrong login details.'})
-            }
-        })
-        .catch(error => {
-            return res.status(400).json({Message: error})
-        })
-})
+    if (userName === '' || password === '') return res.status(400).json({Error: 'Empty login fields.'});
+
+    try {
+        const user = await User.findOne({ userName });
+        if (user && bcrypt.compareSync(password, user.password)) {
+            user.loggedIn = true;
+
+            const token = generateToken(user);
+            const refreshtoken = refreshToken(user);
+
+            res.status(200).json({
+                Message: 'Login successful',
+                token,
+                refreshtoken,
+                session: req.sessionID,
+                user
+            });
+        } else {
+            res.status(400).json({LoginDetails: 'Wrong login details.'})
+        }
+
+    } catch (error) {
+        console.log({error})
+        res.status(400).json({error});
+    }
+});
 
 router.route('/logout').post(protected, (req, res) => {
     const _id  = req.body;

@@ -1,3 +1,7 @@
+function toFixed( num, precision ) {
+    return parseFloat((+(Math.round(+(num + 'e' + precision)) + 'e' + -precision)).toFixed(precision));
+}
+
 function averageRating(data = []) {
     const { reviews } = data[0];
     
@@ -6,7 +10,7 @@ function averageRating(data = []) {
         return sum;
     }, 0)
 
-    return Math.round(sum / reviews.length);
+    return toFixed(sum / reviews.length, 1);
 }
 
 module.exports = {

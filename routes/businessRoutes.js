@@ -23,7 +23,9 @@ router.route('/category-business-list').get(async (req, res) => {
         const businesses = await Business.find({ category: _id })
                                             .populate('businessAddress')
                                             .populate('businessImages')
+                                            .populate('likes')
                                             .populate('offers')
+                                            .populate('comments')
                                             .exec();
         res.status(200).json(businesses);
     } catch (error) {

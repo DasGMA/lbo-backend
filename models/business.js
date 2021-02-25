@@ -37,6 +37,9 @@ const BusinessSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    operatingHours: { 
+        type: Object 
+    },
     businessImages: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'BusinessImage',
