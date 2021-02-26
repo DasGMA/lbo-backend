@@ -26,7 +26,7 @@ router.route('/categories').get(async (req, res) => {
 });
 
 router.route('/post-category').post(protected, async (req, res) => {
-    const accountType = req.user.user.accountType;
+    const accountType = req.user.accountType;
     const {categoryName, categoryDescription} = req.body;
 
     const newCategory = new Category({
@@ -47,7 +47,7 @@ router.route('/post-category').post(protected, async (req, res) => {
 });
 
 router.route('/edit-category').post(protected, async (req, res) => {
-    const { accountType } = req.user.user;
+    const { accountType } = req.user;
     const { _id, categoryName, categoryDescription } = req.body;
 
     const options = { new: true };
@@ -67,7 +67,7 @@ router.route('/edit-category').post(protected, async (req, res) => {
 });
 
 router.route('/delete-category').delete(protected, async (req, res) => {
-    const { accountType } = req.user.user;
+    const { accountType } = req.user;
     const { _id } = req.body;
 
     if (accountType === 'admin') {

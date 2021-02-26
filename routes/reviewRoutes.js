@@ -23,7 +23,7 @@ const getModel = (type) => {
 
 router.route('/post-review').post(protected, async (req, res) => {
     const { title, content, rating, postedBy, _id, type } = req.body;
-    const userId = req.user.user._id;
+    const userId = req.user._id;
     // _id is business or offer ID, type is business or offer type
 
     if (userId !== postedBy) {
@@ -76,8 +76,8 @@ router.route('/post-review').post(protected, async (req, res) => {
 
 router.route('/delete-review').delete(protected, async(req, res) => {
     const { reviewId, _id, type, posterId } = req.body;
-    const userId = req.user.user._id;
-    const { accountType } = req.user.user;
+    const userId = req.user._id;
+    const { accountType } = req.user;
     // _id is business or offer ID, type is business or offer type
 
     if (userId !== posterId || accountType !== 'admin' || accountType !== 'business') {
@@ -114,8 +114,8 @@ router.route('/delete-review').delete(protected, async(req, res) => {
 
 router.route('/edit-review').post(protected, async(req, res) => {
     const { title, content, rating, posterId, reviewId, type } = req.body;
-    const userId = req.user.user._id;
-    const { accountType } = req.user.user;
+    const userId = req.user._id;
+    const { accountType } = req.user;
 
     if (userId !== posterId || accountType !== 'admin') {
         return res.status(500).json({ Message: 'Not authorized.'});

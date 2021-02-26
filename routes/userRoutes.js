@@ -13,8 +13,9 @@ const bcrypt = require('bcryptjs');
 
 const { protected, generateToken, refreshToken } = require('../Authorization/index');
 
+
 router.route('/users').get(protected, async (req, res) => {
-    const {accountType} = req.user.user;
+    const { accountType } = req.user;
 
     if (accountType === 'admin') {
         try {
@@ -29,7 +30,7 @@ router.route('/users').get(protected, async (req, res) => {
 })
 
 router.route('/user').get(protected, async(req, res) => {
-    const { _id } = req.user.user;
+    const { _id } = req.user;
 
     try {
         const user = await User.findById({ _id });
@@ -56,20 +57,17 @@ router.route('/register').post(async (req, res) => {
 
     try {
         const userNew = await newUser.save();
-        const token = generateToken(userNew);
-        res.status(200).json({
-                    message: 'User has been added.',
-                    token
-                });
+        res.status(200).json({ message: 'User has been added.', user: userNew });
     } catch (error) {
-        res.status(400).json({error});
+        res.status(400).json({error: error.message});
     }
        
 });
 
 router.route('/login').post(async(req, res) => {
     const { userName, password } = req.body;
-
+    const { ip } = req;
+    
     if (userName === '' || password === '') return res.status(400).json({Error: 'Empty login fields.'});
 
     try {
@@ -122,7 +120,7 @@ router.route('/logout').post(protected, (req, res) => {
 
 router.route('/delete-account').delete(protected, async (req, res) => {
     const _id = req.body._id;
-    const accountType = req.user.user.accountType;
+    const accountType = req.user.accountType;
     try {
         const user = await User.findByIdAndDelete({ _id });
         // Need to check for user comments and delete them
@@ -179,7 +177,7 @@ router.route('/delete-account').delete(protected, async (req, res) => {
 })
 
 router.route('/update').post(protected, async (req, res) => {
-    const { _id } = req.user.user;
+    const { _id } = req.user;
     const { userName, firstName, lastName, email, accountType, password } = req.body;
 
     const updatedUser = {
@@ -205,7 +203,7 @@ router.route('/update').post(protected, async (req, res) => {
 
 router.route('/get-user-comments').post(protected, async (req, res) => {
     const { userID } = req.body;
-    const { _id } = req.user.user;
+    const { _id } = req.user;
 
     if (_id !== userID) return res.status(500).json({ Message: 'Not authorized.'});
 
@@ -219,7 +217,7 @@ router.route('/get-user-comments').post(protected, async (req, res) => {
 
 router.route('/get-user-offers').post(protected, async (req, res) => {
     const { userID } = req.body;
-    const { _id } = req.user.user;
+    const { _id } = req.user;
 
     if (_id !== userID) return res.status(500).json({ Message: 'Not authorized.'});
 

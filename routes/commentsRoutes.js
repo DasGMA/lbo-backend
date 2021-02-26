@@ -60,7 +60,7 @@ router.route('post-comment').post(protected, async(req, res) => {
 
 router.route('delete-comment').delete(protected, async(req, res) => {
     const {postedBy, modelName, commentID, modelID} = req.body;
-    const {_id} = req.user.user;
+    const {_id} = req.user;
 
     if (postedBy !== _id) return res.status(500).json({Message: 'Not authorized to delete.'});
 
@@ -81,7 +81,7 @@ router.route('delete-comment').delete(protected, async(req, res) => {
 
 router.route('edit-comment').post(protected, async(req, res) => {
     const { postedBy, title, content, commentID } = req.body;
-    const {_id} = req.user.user;
+    const {_id} = req.user;
 
     if (postedBy !== _id) return res.status(500).json({Message: 'Not authorized to edit.'});
 

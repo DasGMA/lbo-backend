@@ -26,19 +26,13 @@ const refreshToken = (user) => {
 
 const protected = (req, res, next) => {
     const token = req.headers.authorization;
-
-    if (token) {
-        jwt.verify(token, secret, (error, user) => {
-            if (error) {
-                return res.status(401).json({Message: error});
-            } else {
-                req.user = user;
-                next();
-            }
-        })
-    } else {
-        return res.status(403).json({Message: 'Token not found'});
-    }
+    if (!token) return res.status(403).json({Message: 'Token not found'});
+   
+    jwt.verify(token, secret, (error, user) => {
+        if (error) return res.status(401).json({Error: error.message});
+        req.user = user.user;
+        next();
+    })
 }
 
 

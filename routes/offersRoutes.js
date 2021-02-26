@@ -10,7 +10,7 @@ const protected = auth.protected;
 
 router.route('post-offer').post(protected, async(req, res) => {
     const {postedBy, title, content, expires, businessID} = req.body;
-    const { accountType } = req.user.user;
+    const { accountType } = req.user;
 
     const newOffer = new Offer({
         title,
@@ -49,7 +49,7 @@ router.route('post-offer').post(protected, async(req, res) => {
 
 router.route('delete-offer').post(protected, async(req, res) => {
     const {postedBy, commentID, businessID} = req.body;
-    const {_id} = req.user.user;
+    const {_id} = req.user;
 
     if (postedBy !== _id) return res.status(500).json({Message: 'Not authorized to delete.'});
 
@@ -69,7 +69,7 @@ router.route('delete-offer').post(protected, async(req, res) => {
 
 router.route('edit-offfer').post(protected, async(req, res) => {
     const { postedBy, title, content, likes, expires,  offerID } = req.body;
-    const { _id } = req.user.user;
+    const { _id } = req.user;
 
     if (postedBy !== _id) return res.status(400).json({Message: 'Not authorized to edit.'});
 

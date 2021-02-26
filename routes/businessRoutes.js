@@ -43,7 +43,7 @@ router.route('/businesses').get(async (req, res) => {
 });
 
 router.route('/post-business').post(protected, async (req, res) => {
-    const accountType = req.user.user.accountType;
+    const accountType = req.user.accountType;
     const {
         category,
         businessName,
@@ -143,8 +143,8 @@ router.route('/business').get(async (req, res) => {
 });
 
 router.route('/edit-business').post(protected, async (req, res) => {
-    const { accountType } = req.user.user;
-    const postedByID = req.user.user._id;
+    const { accountType } = req.user;
+    const postedByID = req.user._id;
     const {
         _id, 
         postedBy, 
@@ -199,8 +199,8 @@ router.route('/edit-business').post(protected, async (req, res) => {
 });
 
 router.route('/delete-business').delete(protected, async (req, res) => {
-    const accountType = req.user.user.accountType;
-    const postedByID = req.user.user._id;
+    const accountType = req.user.accountType;
+    const postedByID = req.user._id;
     const { _id, categoryID, postedBy } = req.body; // _id is business _id
 
     if (accountType === 'admin' || (accountType === 'business' && postedBy === postedByID)) {
