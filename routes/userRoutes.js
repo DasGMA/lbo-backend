@@ -11,7 +11,7 @@ const Avatar = require('../models/avatar');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 
-const { protected, generateToken, refreshToken } = require('../Authorization/index');
+const { protected, generateToken, generateRefreshToken } = require('../Authorization/index');
 
 
 router.route('/users').get(protected, async (req, res) => {
@@ -76,13 +76,10 @@ router.route('/login').post(async(req, res) => {
             user.loggedIn = true;
 
             const token = generateToken(user);
-            const refreshtoken = refreshToken(user);
 
             res.status(200).json({
                 Message: 'Login successful',
                 token,
-                refreshtoken,
-                session: req.sessionID,
                 user
             });
         } else {
@@ -90,7 +87,6 @@ router.route('/login').post(async(req, res) => {
         }
 
     } catch (error) {
-        console.log({error})
         res.status(400).json({error});
     }
 });
