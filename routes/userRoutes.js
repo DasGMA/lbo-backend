@@ -11,7 +11,14 @@ const Avatar = require('../models/avatar');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 
-const { protected, generateToken, generateRefreshToken } = require('../Authorization/index');
+const { 
+    protected, 
+    generateToken, 
+    generateRefreshToken,
+    randomTokenString,
+    hash,
+    userDetails
+} = require('../Authorization/index');
 
 
 router.route('/users').get(protected, async (req, res) => {
@@ -41,15 +48,23 @@ router.route('/user').get(protected, async(req, res) => {
 });
 
 router.route('/register').post(async (req, res) => {
-    const user = req.body;
-    const hash = bcrypt.hashSync(user.password, 12);
-    user.password = hash;
+    const { user, origin } = req.body;
+
+    if (await User.findOne({ userName: user.userName })) {
+        return
+        // Will send email to let know the user that account is already created under that userName
+    }
+
+    // Hash password
+    const hashPassword = hash(user.password);
+    user.password = hashPassword;
 
     const newUser = new User({
         userName: user.userName,
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
+        verificationToken: randomTokenString(),
         password: user.password,
         accountType: user.accountType.toLocaleLowerCase(),
         avatar: { 'imageUrl': 'https://lbo-images.s3.us-west-1.amazonaws.com/avatars/1610576183164'}
@@ -57,18 +72,20 @@ router.route('/register').post(async (req, res) => {
 
     try {
         const userNew = await newUser.save();
+        // Send verification email await sendVerificationEmail(userNew, origin);
         res.status(200).json({ message: 'User has been added.', user: userNew });
     } catch (error) {
         res.status(400).json({error: error.message});
     }
-       
 });
 
 router.route('/login').post(async(req, res) => {
     const { userName, password } = req.body;
     const { ip } = req;
     
-    if (userName === '' || password === '') return res.status(400).json({Error: 'Empty login fields.'});
+    if (userName === '' || password === '') { 
+        return res.status(400).json({Error: 'Empty login fields.'});
+    }
 
     try {
         const user = await User.findOne({ userName });
@@ -76,11 +93,14 @@ router.route('/login').post(async(req, res) => {
             user.loggedIn = true;
 
             const token = generateToken(user);
+            const refreshToken = await generateRefreshToken(user, ip);
 
             res.status(200).json({
                 Message: 'Login successful',
+                user: userDetails(user),
                 token,
-                user
+                refreshToken: refreshToken.token
+                
             });
         } else {
             res.status(400).json({LoginDetails: 'Wrong login details.'})

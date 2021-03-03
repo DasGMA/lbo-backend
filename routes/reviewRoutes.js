@@ -1,6 +1,6 @@
 const express = require('express');
 
-const { averageRating } = require('./helpers/index');
+const { averageRating } = require('../helpers');
 
 const auth = require('../Authorization/index');
 const Business = require('../models/business');
