@@ -7,13 +7,13 @@ module.exports = {
   REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET,
   AWS_SECRET_ACCESS: process.env.AWS_SECRET_ACCESS,
   AWS_ACCESS_KEY: process.env.AWS_ACCESS_KEY,
-  EMAIL_FROM: 'info@node-mongo-signup-verification-api.com',
+  EMAIL_FROM: process.env.EMAIL_FROM,
   SMTP_OPTIONS: {
-    host: '[ENTER YOUR OWN SMTP OPTIONS OR CREATE FREE TEST ACCOUNT IN ONE CLICK AT https://ethereal.email/]',
-    port: 587,
+    host: process.env.EMAIL_HOST,
+    port: 465,
       auth: {
-        user: '',
-        pass: ''
+        user: process.env.EMAIL_FROM,
+        pass: process.env.EMAIL_PASSWORD
       }
     }
 }

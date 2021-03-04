@@ -4,8 +4,10 @@ const config = require('../config');
 const nodemailer = require('nodemailer');
 const Token = require('../models/token');
 const crypto = require('crypto');
+const User = require('../models/user');
 const secret = config.SECRET;
 const tokenSecret = config.TOKEN_SECRET;
+const refreshTokenSecret = config.REFRESH_TOKEN_SECRET;
 
 const randomTokenString = () => {
     return crypto.randomBytes(40).toString('hex');
@@ -25,31 +27,38 @@ const generateToken = (user) => {
 }
 
 const generateRefreshToken = async (user, ipAddress) => {
+    const payload = { id: user._id, ip: ipAddress };
+    const options = { expiresIn: '7d', jwtid: refreshTokenSecret };
+    const token = jwt.sign(payload, secret, options);
+
     const newToken = new Token({
         user: user._id,
-        token: randomTokenString(),
+        token,
         // Expires in 7 days
         expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         createdByIp: ipAddress
     });
 
     try {
-        await newToken.save();
+        const refreshToken = await newToken.save();
+        console.log({refreshToken})
+        return refreshToken;
     } catch (error) {
-        throw({ Message: error.message});
+        throw({ Message: error});
     }
 }
 
 const protected = async (req, res, next) => {
     const { _id } = req.body;
-    const token = await Token.findOne({ user: _id });
+    const tokens = await Token.find({ user: _id });
     const account = await User.findOne({ _id });
-
-    if (!token || !account ) return res.status(401).json({Message: 'Not authorized.'});
-   
-    jwt.verify(token, secret, (error, user) => {
+    
+    if (!tokens || tokens.length === 0 || !account ) return res.status(401).json({Message: 'Not authorized.'});
+    const currentToken = tokens[tokens.length - 1].token;
+    console.log({tokens, currentToken })
+    jwt.verify(currentToken, secret, (error, user) => {
         if (error) return res.status(401).json({Error: error.message});
-        req.user = account;
+        req.user = userDetails(account);
         next();
     });
 }
@@ -121,8 +130,8 @@ const userDetails = (user) => {
         avatar,
         userName,
         accountType,
-        loggedin,
-        firstname, 
+        loggedIn,
+        firstName, 
         lastName,
         email,
         flagged,
@@ -135,8 +144,8 @@ const userDetails = (user) => {
         avatar,
         userName, 
         accountType,
-        loggedin,
-        firstname,
+        loggedIn,
+        firstName,
         lastName,
         email,
         flagged,

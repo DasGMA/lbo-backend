@@ -17,22 +17,25 @@ const {
     generateRefreshToken,
     randomTokenString,
     hash,
-    userDetails
+    userDetails,
+    sendVerificationEmail,
+    sendAlreadyRegisteredEmail
 } = require('../Authorization/index');
+const Token = require('../models/token');
 
 
 router.route('/users').get(protected, async (req, res) => {
     const { accountType } = req.user;
-
-    if (accountType === 'admin') {
-        try {
-            const users = await User.find();
-            res.status(200).json(users);
-        } catch (error) {
-            res.status(400).json(error);
-        }
-    } else {
-        res.status(500).json({Message: 'You have no access to users.'});
+    
+    if (accountType !== 'admin') { 
+        return res.status(500).json({Message: 'You have no access to users.'});
+    };
+    
+    try {
+        const users = await User.find();
+        res.status(200).json(users);
+    } catch (error) {
+        res.status(400).json(error);
     }
 })
 
@@ -48,11 +51,13 @@ router.route('/user').get(protected, async(req, res) => {
 });
 
 router.route('/register').post(async (req, res) => {
-    const { user, origin } = req.body;
-
-    if (await User.findOne({ userName: user.userName })) {
-        return
-        // Will send email to let know the user that account is already created under that userName
+    const { user } = req.body;
+    const origin = req.get('origin');
+    console.log(origin)
+    // If already registered send email to inform the user
+    if (await User.findOne({ email: user.email }) ||
+        await User.findOne({ userName: user.userName })) {
+        return await sendAlreadyRegisteredEmail(user.email);
     }
 
     // Hash password
@@ -72,28 +77,45 @@ router.route('/register').post(async (req, res) => {
 
     try {
         const userNew = await newUser.save();
-        // Send verification email await sendVerificationEmail(userNew, origin);
+        await sendVerificationEmail(userNew, origin);
         res.status(200).json({ message: 'User has been added.', user: userNew });
     } catch (error) {
         res.status(400).json({error: error.message});
     }
 });
 
+router.route('/verify-email').post( async (req, res) => {
+    const { token } = req.query;
+
+    try {
+        const user = await User.findOne({ verificationToken: token });
+        user.verified = Date.now();
+        await user.save();
+
+        res.status(200).json({Message: 'Verification successful.'});
+    } catch (error) {
+        res.status(401).json({ Message: error.message});
+    }
+});
+
 router.route('/login').post(async(req, res) => {
     const { userName, password } = req.body;
     const { ip } = req;
-    
+
     if (userName === '' || password === '') { 
-        return res.status(400).json({Error: 'Empty login fields.'});
+        return res.status(401).json({Error: 'Empty login fields.'});
     }
 
     try {
         const user = await User.findOne({ userName });
+        
         if (user && bcrypt.compareSync(password, user.password)) {
-            user.loggedIn = true;
 
             const token = generateToken(user);
             const refreshToken = await generateRefreshToken(user, ip);
+
+            user.loggedIn = true;
+            await user.save();
 
             res.status(200).json({
                 Message: 'Login successful',
@@ -111,27 +133,21 @@ router.route('/login').post(async(req, res) => {
     }
 });
 
-router.route('/logout').post(protected, (req, res) => {
+router.route('/logout').post(protected, async (req, res) => {
     const _id  = req.body;
-    User.findOne({ _id })
-        .then(user => {
-            user.loggedIn = false;
-            user.save()
-                .then(() => {
-                    req.session.destroy(error => {  
-                        if (error){  
-                            res.status(400).json({Message: error});
-                        } else {  
-                            res.status(200).json({Message: 'Logout successful.'});
-                        }  
-                    })
-                })
-                .catch(error => res.status(400).json({Error: error}))
-            
-        })
-        .catch(error => {
-            return res.status(400).json({Message: error})
-        })
+
+    try {
+        const user = await User.findOne({ _id });
+        user.loggedIn = false;
+        await user.save();
+
+        // Destroy session
+        req.session.destroy();
+
+        return res.status(200).json({Message: 'Logout successful.'});
+    } catch(error) {
+        return res.status(400).json({Message: error})
+    }
 })
 
 router.route('/delete-account').delete(protected, async (req, res) => {
@@ -256,6 +272,9 @@ router.route('/get-user-reviews').post(async (req, res) => {
     }
 });
 
-
+router.route('/tokens').get(async(req, res) => {
+    const tokens = await Token.remove();
+    res.status(200).json(tokens)
+})
 
 module.exports = router;

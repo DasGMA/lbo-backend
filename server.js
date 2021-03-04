@@ -9,7 +9,6 @@ const session = require('express-session');
 const server = express();
 
 server.use(cors({origin: true, credentials: true}));
-
 server.use(helmet());
 server.use(express.json());
 server.use(morgan('dev'));
@@ -25,7 +24,7 @@ mongoose.connect(`${config.DB_URI}`, {
     useUnifiedTopology: true,
     useFindAndModify: false
   }).then(() => {
-    console.log('MongoDB connected')
+    console.log('MongoDB connected');
     }).catch(error => console.log(error));
 
 const usersRouter = require('./routes/userRoutes');
@@ -38,7 +37,7 @@ const offersRouter = require('./routes/offersRoutes');
 const mediaRouter = require('./routes/mediaRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
 
-server.use('/', usersRouter);
+server.use('/account', usersRouter);
 server.use('/', categoriesRouter);
 server.use('/', businessRouter);
 server.use('/', addressRouter);
