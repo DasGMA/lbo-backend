@@ -1,5 +1,5 @@
 {
-  "name": "Back-end",
+  "name": "backend",
   "version": "1.0.0",
   "description": "Back end for long beach front end",
   "main": "server.js",
