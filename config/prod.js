@@ -11,9 +11,9 @@ module.exports = {
   SMTP_OPTIONS: {
     host: process.env.EMAIL_HOST,
     port: 465,
-      auth: {
-        user: process.env.EMAIL_FROM,
-        pass: process.env.EMAIL_PASSWORD
-      }
-    }
-}
+    auth: {
+      user: process.env.EMAIL_FROM,
+      pass: process.env.EMAIL_PASSWORD,
+    },
+  },
+};

@@ -1,16 +1,19 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const AvatarSchema = mongoose.Schema({
+const AvatarSchema = mongoose.Schema(
+  {
     image: {
-        type: Object
+      type: Object,
     },
     postedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-    }
-}, {
-    timestamps: true
-});
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
 
-const Avatar = mongoose.model('Avatar', AvatarSchema);
+const Avatar = mongoose.model("Avatar", AvatarSchema);
 module.exports = Avatar;

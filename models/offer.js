@@ -1,46 +1,53 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const OfferSchema = mongoose.Schema({
+const OfferSchema = mongoose.Schema(
+  {
     type: {
-        type: String,
-        default: 'offer'
+      type: String,
+      default: "offer",
     },
     title: {
-        type: String,
-        maxlength: 50,
-        required: true
+      type: String,
+      maxlength: 50,
+      required: true,
     },
     expirationDate: {
-        type: Date,
-        required: true
+      type: Date,
+      required: true,
     },
     averageRating: {
-        type: Number,
-        default: 0
+      type: Number,
+      default: 0,
     },
     content: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
-    reviews: [{
+    reviews: [
+      {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Review'
-    }],
-    comments: [{
+        ref: "Review",
+      },
+    ],
+    comments: [
+      {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Comment'
-    }],
+        ref: "Comment",
+      },
+    ],
     postedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
     likes: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Like'
-    }
-}, {
-    timestamps: true
-});
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Like",
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
 
-const Offer = mongoose.model('Offer', OfferSchema);
+const Offer = mongoose.model("Offer", OfferSchema);
 module.exports = Offer;
